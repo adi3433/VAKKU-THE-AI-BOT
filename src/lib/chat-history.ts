@@ -47,14 +47,15 @@ function autoTitle(messages: ChatMessage[], locale: Locale): string {
  * Save or update a conversation.
  * Only stores if user has memory enabled.
  */
-export function saveConversation(
+export async function saveConversation(
   userId: string,
   sessionId: string,
   messages: ChatMessage[],
   locale: Locale,
   escalated: boolean = false
-): StoredConversation | null {
-  if (!isMemoryEnabled(userId)) return null;
+): Promise<StoredConversation | null> {
+  const memEnabled = await isMemoryEnabled(userId);
+  if (!memEnabled) return null;
 
   const hashedUserId = hashIdentifier(userId);
   const convos = conversationStore.get(hashedUserId) || [];

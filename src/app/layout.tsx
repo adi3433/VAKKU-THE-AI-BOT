@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { DarkModeInit } from "@/components/DarkModeInit";
 
 export const metadata: Metadata = {
   title: "Vaakku — Voter Information Assistant | SVEEP Kottayam",
@@ -20,7 +21,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-[var(--color-neutral-50)] text-[var(--color-neutral-900)]">
+      <head>
+        {/* Inline script to prevent dark mode flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=localStorage.getItem('vaakku-dark-mode');if(d==='true'||(d===null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
+      </head>
+      <body className="antialiased">
+        <DarkModeInit />
         {children}
       </body>
     </html>

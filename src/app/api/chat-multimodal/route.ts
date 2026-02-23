@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
 
     // Save to chat history
     try {
-      saveConversation(
+      await saveConversation(
         userId ?? sessionId,
         sessionId,
         [

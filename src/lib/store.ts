@@ -1,8 +1,9 @@
 /**
- * Vaakku — Zustand Store V2.1
- * ────────────────────────────
+ * Vaakku — Zustand Store V4
+ * ──────────────────────────
  * Global client state: locale, session, messages, UI flags,
- * memory preferences, chat history sidebar, uploads.
+ * memory preferences, chat history sidebar, uploads, dark mode,
+ * incognito, custom instructions, keyboard shortcuts.
  */
 import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
@@ -15,13 +16,16 @@ interface VaakkuState {
 
   // ── Session ──
   sessionId: string;
-  userId: string; // persistent user ID for memory
+  userId: string;
   resetSession: () => void;
 
   // ── Chat ──
   messages: ChatMessage[];
   isTyping: boolean;
   addMessage: (msg: ChatMessage) => void;
+  updateMessage: (id: string, content: string) => void;
+  removeMessage: (id: string) => void;
+  setMessages: (msgs: ChatMessage[]) => void;
   clearMessages: () => void;
   setTyping: (v: boolean) => void;
 
@@ -36,12 +40,17 @@ interface VaakkuState {
   setActiveConversationId: (id: string | null) => void;
   historySidebarOpen: boolean;
   toggleHistorySidebar: () => void;
+  setHistorySidebarOpen: (v: boolean) => void;
 
   // ── Memory ──
   memoryEnabled: boolean;
   setMemoryEnabled: (v: boolean) => void;
   memoryConsentGiven: boolean;
   setMemoryConsentGiven: (v: boolean) => void;
+
+  // ── Incognito ──
+  incognitoMode: boolean;
+  setIncognitoMode: (v: boolean) => void;
 
   // ── Upload ──
   pendingUpload: PendingUpload | null;
@@ -51,11 +60,17 @@ interface VaakkuState {
 
   // ── UI ──
   sidebarOpen: boolean;
+  setSidebarOpen: (v: boolean) => void;
   toggleSidebar: () => void;
+  darkMode: boolean;
+  setDarkMode: (v: boolean) => void;
+  toggleDarkMode: () => void;
   motionEnabled: boolean;
   setMotionEnabled: (v: boolean) => void;
   accessibilityMode: boolean;
   setAccessibilityMode: (v: boolean) => void;
+  shortcutHelpOpen: boolean;
+  setShortcutHelpOpen: (v: boolean) => void;
 }
 
 interface PendingUpload {
@@ -64,7 +79,7 @@ interface PendingUpload {
   base64: string;
   mimeType: string;
   size: number;
-  preview?: string; // data URL for image preview
+  preview?: string;
 }
 
 // Generate or retrieve persistent userId from localStorage
@@ -75,6 +90,21 @@ function getPersistentUserId(): string {
   const newId = uuid();
   localStorage.setItem('vaakku_userId', newId);
   return newId;
+}
+
+// Retrieve persisted dark mode preference
+function getPersistedDarkMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem('vaakku_darkMode');
+  if (stored !== null) return stored === 'true';
+  return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
+}
+
+// Retrieve persisted sidebar state
+function getPersistedSidebar(): boolean {
+  if (typeof window === 'undefined') return true;
+  const stored = localStorage.getItem('vaakku_sidebarOpen');
+  return stored !== null ? stored === 'true' : true;
 }
 
 export const useVaakkuStore = create<VaakkuState>((set) => ({
@@ -92,6 +122,15 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
   isTyping: false,
   addMessage: (msg) =>
     set((state) => ({ messages: [...state.messages, msg] })),
+  updateMessage: (id, content) =>
+    set((state) => ({
+      messages: state.messages.map((m) => (m.id === id ? { ...m, content } : m)),
+    })),
+  removeMessage: (id) =>
+    set((state) => ({
+      messages: state.messages.filter((m) => m.id !== id),
+    })),
+  setMessages: (messages) => set({ messages }),
   clearMessages: () => set({ messages: [] }),
   setTyping: (isTyping) => set({ isTyping }),
 
@@ -135,12 +174,17 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
   setActiveConversationId: (id) => set({ activeConversationId: id }),
   historySidebarOpen: false,
   toggleHistorySidebar: () => set((s) => ({ historySidebarOpen: !s.historySidebarOpen })),
+  setHistorySidebarOpen: (v) => set({ historySidebarOpen: v }),
 
   // Memory
   memoryEnabled: false,
   setMemoryEnabled: (memoryEnabled) => set({ memoryEnabled }),
   memoryConsentGiven: false,
   setMemoryConsentGiven: (memoryConsentGiven) => set({ memoryConsentGiven }),
+
+  // Incognito
+  incognitoMode: false,
+  setIncognitoMode: (incognitoMode) => set({ incognitoMode }),
 
   // Upload
   pendingUpload: null,
@@ -149,10 +193,36 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
   setIsUploading: (isUploading) => set({ isUploading }),
 
   // UI
-  sidebarOpen: false,
-  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  sidebarOpen: typeof window !== 'undefined' ? getPersistedSidebar() : true,
+  setSidebarOpen: (sidebarOpen) => {
+    if (typeof window !== 'undefined') localStorage.setItem('vaakku_sidebarOpen', String(sidebarOpen));
+    set({ sidebarOpen });
+  },
+  toggleSidebar: () => set((s) => {
+    const next = !s.sidebarOpen;
+    if (typeof window !== 'undefined') localStorage.setItem('vaakku_sidebarOpen', String(next));
+    return { sidebarOpen: next };
+  }),
+  darkMode: typeof window !== 'undefined' ? getPersistedDarkMode() : false,
+  setDarkMode: (darkMode) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vaakku_darkMode', String(darkMode));
+      document.documentElement.classList.toggle('dark', darkMode);
+    }
+    set({ darkMode });
+  },
+  toggleDarkMode: () => set((s) => {
+    const next = !s.darkMode;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vaakku_darkMode', String(next));
+      document.documentElement.classList.toggle('dark', next);
+    }
+    return { darkMode: next };
+  }),
   motionEnabled: true,
   setMotionEnabled: (motionEnabled) => set({ motionEnabled }),
   accessibilityMode: false,
   setAccessibilityMode: (accessibilityMode) => set({ accessibilityMode }),
+  shortcutHelpOpen: false,
+  setShortcutHelpOpen: (shortcutHelpOpen) => set({ shortcutHelpOpen }),
 }));

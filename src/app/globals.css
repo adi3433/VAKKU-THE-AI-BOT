@@ -64,6 +64,56 @@
   --transition-fast: 200ms cubic-bezier(0, 0, 0.2, 1);
   --transition-normal: 300ms cubic-bezier(0, 0, 0.2, 1);
   --transition-slow: 500ms cubic-bezier(0, 0, 0.2, 1);
+
+  /* Surface colors (light mode defaults) */
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F9FAFB;
+  --surface-tertiary: #F3F4F6;
+  --surface-elevated: #FFFFFF;
+  --surface-overlay: rgba(0, 0, 0, 0.3);
+  --border-primary: #E5E7EB;
+  --border-secondary: #F3F4F6;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-tertiary: #9CA3AF;
+  --text-inverted: #FFFFFF;
+}
+
+/* ── Dark Mode ─────────────────────────────────────────────────── */
+.dark {
+  --color-neutral-0: #111827;
+  --color-neutral-50: #1F2937;
+  --color-neutral-100: #374151;
+  --color-neutral-200: #4B5563;
+  --color-neutral-300: #6B7280;
+  --color-neutral-400: #9CA3AF;
+  --color-neutral-500: #D1D5DB;
+  --color-neutral-600: #E5E7EB;
+  --color-neutral-700: #F3F4F6;
+  --color-neutral-800: #F9FAFB;
+  --color-neutral-900: #FFFFFF;
+
+  --color-primary-50: #172554;
+  --color-primary-100: #1E3A8A;
+  --color-primary-200: #1E40AF;
+
+  --surface-primary: #1F2937;
+  --surface-secondary: #111827;
+  --surface-tertiary: #374151;
+  --surface-elevated: #374151;
+  --surface-overlay: rgba(0, 0, 0, 0.6);
+  --border-primary: #4B5563;
+  --border-secondary: #374151;
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-tertiary: #9CA3AF;
+  --text-inverted: #111827;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-glow: 0 0 20px 0 rgb(37 99 235 / 0.35);
 }
 
 @theme inline {
@@ -84,8 +134,9 @@ html {
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-neutral-900);
-  background: var(--color-neutral-50);
+  color: var(--text-primary);
+  background: var(--surface-secondary);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* Malayalam text class */
@@ -164,6 +215,11 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(31, 41, 55, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-dark {

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const conversations = getAllConversationsForExport(userId);
-    const response = exportUserMemory(userId, conversations);
+    const response = await exportUserMemory(userId, conversations);
 
     // Audit the data export
     recordAuditEntry({

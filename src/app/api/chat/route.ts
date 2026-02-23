@@ -29,6 +29,7 @@ import { hashIdentifier } from '@/lib/privacy';
 import { ResponseCache } from '@/lib/fireworks';
 import { recordQueryLog, recordAuditEntry } from '@/lib/admin-audit';
 import { saveConversation } from '@/lib/chat-history';
+import { formatBoothResult, getGoogleMapsDirectionsUrl } from '@/lib/booth-data';
 import type { ChatRequest, ChatResponseV2, RetrievalTraceEntry } from '@/types';
 
 // V2: Use ResponseCache with configurable TTL instead of raw Map
@@ -78,8 +79,62 @@ export async function POST(request: NextRequest) {
     // Get RAG result from router (most text queries go through RAG)
     let ragResult: RAGOutput | undefined = routerResult.ragResult;
 
-    // For structured lookups, still run RAG to get a helpful text answer
-    if (routerResult.type === 'structured_lookup' && !ragResult) {
+    // Build response text
+    let responseText = '';
+    let confidence = 0;
+    let retrievalTrace: RetrievalTraceEntry[] = [];
+
+    // ── Direct booth answer from local data ───────────────────
+    const boothResults = routerResult.lookupResult?.boothResults;
+    if (routerResult.type === 'structured_lookup' && boothResults && boothResults.length > 0) {
+      // Format booth results directly — no LLM needed
+      const boothLocale = (routerResult.resolvedLocale === 'ml' ? 'ml' : 'en') as 'en' | 'ml';
+      const formatted = boothResults.map((b) => formatBoothResult(b, boothLocale));
+
+      if (boothResults.length === 1) {
+        responseText = boothLocale === 'ml'
+          ? `നിങ്ങളുടെ പോളിംഗ് സ്റ്റേഷൻ വിവരങ്ങൾ:\n\n${formatted[0]}\n\nLAC 97-Kottayam, District 10-Kottayam. സ്ഥിരീകരണത്തിന് [electoralsearch.eci.gov.in](https://electoralsearch.eci.gov.in/) സന്ദർശിക്കുക.`
+          : `Here are your polling station details:\n\n${formatted[0]}\n\nThis booth serves LAC 97-Kottayam, District 10-Kottayam. For verification, visit [electoralsearch.eci.gov.in](https://electoralsearch.eci.gov.in/).`;
+      } else {
+        responseText = boothLocale === 'ml'
+          ? `${boothResults.length} പോളിംഗ് സ്റ്റേഷനുകൾ കണ്ടെത്തി:\n\n${formatted.join('\n\n')}\n\nLAC 97-Kottayam, District 10-Kottayam. സ്ഥിരീകരണത്തിന് [electoralsearch.eci.gov.in](https://electoralsearch.eci.gov.in/) സന്ദർശിക്കുക.`
+          : `Found ${boothResults.length} matching polling stations:\n\n${formatted.join('\n\n')}\n\nAll booths are in LAC 97-Kottayam, District 10-Kottayam. For verification, visit [electoralsearch.eci.gov.in](https://electoralsearch.eci.gov.in/).`;
+      }
+
+      confidence = 0.95; // High confidence — data is from official records
+
+      // Build sources from booth data
+      ragResult = {
+        text: responseText,
+        confidence,
+        sources: boothResults.slice(0, 3).map((b) => ({
+          title: `Election Commission of India - Official Booth List LAC 97`,
+          url: b.sourceUrl || 'https://electoralsearch.eci.gov.in/',
+          lastUpdated: '2026-01-15',
+          excerpt: `Polling Station ${b.stationNumber} is officially designated as ${b.title}. ${b.landmark ? `Near ${b.landmark}.` : ''}`,
+        })),
+        actionable: [],
+        retrievalScore: 1.0,
+        rerankerScores: [1.0],
+        retrievalTrace: [],
+        generatorModel: 'local-booth-data',
+        promptVersionHash: 'booth-direct',
+        trace: {
+          retrievalLatencyMs: 0,
+          rerankLatencyMs: 0,
+          generationLatencyMs: 0,
+          totalLatencyMs: Date.now() - startTime,
+          retrievedCount: boothResults.length,
+          rerankedCount: boothResults.length,
+          contextTokens: 0,
+          promptTokens: 0,
+          completionTokens: 0,
+          promptVersion: 'booth-direct-v1',
+        },
+        escalate: false,
+      };
+    } else if (routerResult.type === 'structured_lookup' && !ragResult) {
+      // Structured lookup detected but no booth results — fall back to RAG
       ragResult = await ragOrchestrate({
         query: routerResult.resolvedQuery,
         locale: routerResult.resolvedLocale,
@@ -88,19 +143,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Build response text
-    let responseText = '';
-    let confidence = 0;
-    let retrievalTrace: RetrievalTraceEntry[] = [];
-
-    if (ragResult) {
+    if (ragResult && !responseText) {
       responseText = ragResult.text;
       confidence = ragResult.confidence;
       retrievalTrace = ragResult.retrievalTrace;
-    } else if (routerResult.visionResult) {
+    } else if (!responseText && routerResult.visionResult) {
       responseText = routerResult.visionResult.explanation;
       confidence = routerResult.visionResult.confidence;
-    } else {
+    } else if (!responseText) {
       responseText = locale === 'ml'
         ? 'ക്ഷമിക്കണം, എനിക്ക് ഈ അഭ്യർത്ഥന പ്രോസസ്സ് ചെയ്യാൻ കഴിഞ്ഞില്ല.'
         : 'Sorry, I could not process this request.';
@@ -183,7 +233,7 @@ export async function POST(request: NextRequest) {
         { id: uuid(), role: 'user' as const, content: message.trim(), locale: routerResult.resolvedLocale, timestamp: new Date().toISOString() },
         { id: response.messageId, role: 'assistant' as const, content: response.text, locale: routerResult.resolvedLocale, timestamp: response.timestamp },
       ];
-      saveConversation(
+      await saveConversation(
         userId ?? sessionId,
         sessionId,
         allMessages,

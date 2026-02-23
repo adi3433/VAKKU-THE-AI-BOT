@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = setMemoryConsent(body);
+    const response = await setMemoryConsent(body);
     return NextResponse.json(response);
   } catch (error) {
     console.error('Memory consent error:', error);
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const consent = getMemoryConsent(userId);
+    const consent = await getMemoryConsent(userId);
 
     return NextResponse.json({
       userId,

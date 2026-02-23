@@ -14,6 +14,7 @@
 import { processVoiceInput, type VoiceResult } from '@/lib/voice';
 import { extractDocumentFields, type VisionExtractionResult } from '@/lib/vision';
 import { ragOrchestrate, type RAGInput, type RAGOutput } from '@/lib/rag/orchestrator';
+import { searchBooths, formatBoothResult, type BoothRecord } from '@/lib/booth-data';
 import type { Locale, ChatMessage } from '@/types';
 
 // ── Input types ──────────────────────────────────────────────────
@@ -69,6 +70,8 @@ export interface StructuredLookupResult {
   suggestedEndpoint: string;
   extractedParams: Record<string, string>;
   message: string;
+  /** Booth records found by direct local search (only for booth_search) */
+  boothResults?: BoothRecord[];
 }
 
 // ── Structured lookup detection ──────────────────────────────────
@@ -126,11 +129,18 @@ function detectStructuredLookup(query: string): StructuredLookupResult | null {
         const pincodeMatch = query.match(/\b(\d{6})\b/);
         if (pincodeMatch) extractedParams.pincode = pincodeMatch[1];
 
+        // For booth queries, do a direct local search right away
+        let boothResults: BoothRecord[] | undefined;
+        if (type === 'booth_search') {
+          boothResults = searchBooths(query, 5);
+        }
+
         return {
           type,
           suggestedEndpoint: endpoint,
           extractedParams,
           message: `Detected ${type.replace('_', ' ')} query. Suggested endpoint: ${endpoint}`,
+          boothResults,
         };
       }
     }

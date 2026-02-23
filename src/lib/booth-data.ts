@@ -110,8 +110,9 @@ export function searchBooths(query: string, maxResults = 5): BoothRecord[] {
   const booths = getAllBooths();
   const lowerQuery = query.toLowerCase().trim();
 
-  // Check for station number query (e.g., "booth 5", "station 42", "polling station 170")
-  const numberMatch = lowerQuery.match(/(?:booth|station|polling\s*station|number|no\.?|#)\s*(\d+)/i)
+  // Check for station number query (e.g., "booth 5", "station 42", "booth number is 133")
+  const numberMatch = lowerQuery.match(/(?:booth|station|polling\s*station)\s*(?:number\s*(?:is\s*)?)?(\d+)/i)
+    || lowerQuery.match(/(?:number|no\.?|#)\s*(?:is\s*)?(\d+)/i)
     || lowerQuery.match(/^(\d{1,3})$/);
   if (numberMatch) {
     const num = parseInt(numberMatch[1], 10);
@@ -177,14 +178,14 @@ export function formatBoothResult(booth: BoothRecord, locale: 'en' | 'ml'): stri
   const mapsUrl = getGoogleMapsDirectionsUrl(booth.lat, booth.lng);
 
   if (locale === 'ml') {
-    return `📍 **പോളിംഗ് സ്റ്റേഷൻ ${booth.stationNumber}**: ${booth.title}
-📌 ലാൻഡ്‌മാർക്ക്: ${booth.landmark}
-🗺️ GPS: ${booth.lat}°N, ${booth.lng}°E
-🔗 [Google Maps-ൽ വഴി കാണുക](${mapsUrl})`;
+    return `**പോളിംഗ് സ്റ്റേഷൻ ${booth.stationNumber}** — ${booth.title}
+- **ലാൻഡ്‌മാർക്ക്:** ${booth.landmark}
+- **GPS:** ${booth.lat}°N, ${booth.lng}°E
+- [Google Maps-ൽ വഴി കാണുക](${mapsUrl})`;
   }
 
-  return `📍 **Polling Station ${booth.stationNumber}**: ${booth.title}
-📌 Landmark: ${booth.landmark}
-🗺️ GPS: ${booth.lat}°N, ${booth.lng}°E
-🔗 [Get directions on Google Maps](${mapsUrl})`;
+  return `**Polling Station ${booth.stationNumber}** — ${booth.title}
+- **Landmark:** ${booth.landmark}
+- **GPS:** ${booth.lat}°N, ${booth.lng}°E
+- [Get Directions](${mapsUrl})`;
 }

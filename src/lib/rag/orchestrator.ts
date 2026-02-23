@@ -109,7 +109,7 @@ export async function ragOrchestrate(input: RAGInput): Promise<RAGOutput> {
     .join('\n');
 
   // Memory context (empty if user hasn't opted in)
-  const memoryBlock = userId ? buildMemoryContext(userId) : '';
+  const memoryBlock = userId ? await buildMemoryContext(userId) : '';
 
   const systemPrompt = ragSystemPrompt();
   let userPrompt = ragUserPrompt({

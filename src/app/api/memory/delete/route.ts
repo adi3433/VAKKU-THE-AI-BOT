@@ -25,7 +25,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deletedMemories = deleteUserMemory(userId);
+    const deletedMemories = await deleteUserMemory(userId);
     const deletedConversations = deleteAllConversations(userId);
 
     // Audit the deletion
