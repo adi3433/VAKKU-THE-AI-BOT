@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaakku
+  labels:
+    app: vaakku
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vaakku
+  template:
+    metadata:
+      labels:
+        app: vaakku
+    spec:
+      containers:
+        - name: vaakku
+          image: ghcr.io/sveep-kottayam/vaakku:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: vaakku-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaakku
+spec:
+  selector:
+    app: vaakku
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vaakku
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - vaakku.sveep-kottayam.gov.in
+      secretName: vaakku-tls
+  rules:
+    - host: vaakku.sveep-kottayam.gov.in
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vaakku
+                port:
+                  number: 80

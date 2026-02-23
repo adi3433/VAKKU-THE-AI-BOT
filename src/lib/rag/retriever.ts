@@ -1,0 +1,298 @@
+/**
+ * Retriever — Hybrid Vector + BM25 Search
+ * ─────────────────────────────────────────
+ * Stage 1-2 of RAG pipeline:
+ *   1) Embed query with qwen3-embedding-8b
+ *   2) Vector search (cosine similarity) + BM25 keyword scoring
+ *   3) Merge and return top-15 candidates for reranking
+ */
+
+import type { RetrievedPassage, RetrievalResult } from '@/types';
+import { embedQuery, embedDocuments, cosineSimilarity } from './embeddings';
+import { getConfig } from '@/lib/fireworks';
+import { getAllBooths, type BoothRecord } from '@/lib/booth-data';
+
+// ── Sample Knowledge Base (seeded data for proof-of-concept) ──
+const CORE_KNOWLEDGE_BASE: RetrievedPassage[] = [
+  {
+    id: 'kb-001',
+    content:
+      'To register as a voter in Kerala, you must be an Indian citizen, at least 18 years old on the qualifying date (January 1), and a resident of the constituency. Fill Form 6 at voters.eci.gov.in or visit your nearest Electoral Registration Officer (ERO).',
+    metadata: {
+      source: 'Election Commission of India — Voter Registration Guide',
+      url: 'https://voters.eci.gov.in/',
+      lastUpdated: '2026-01-10',
+      section: 'Registration',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-002',
+    content:
+      'Documents required for voter registration: (1) Proof of age — birth certificate, school leaving certificate, passport, or PAN card. (2) Proof of address — Aadhaar card, utility bill, bank passbook, or rent agreement. (3) One recent passport-size photograph.',
+    metadata: {
+      source: 'CEO Kerala — Required Documents',
+      url: 'https://ceokerala.gov.in/registration-documents',
+      lastUpdated: '2026-01-05',
+      section: 'Documents',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-003',
+    content:
+      'Kottayam district has 6 assembly constituencies: Vaikom, Kottayam, Puthuppally, Changanassery, Kanjirappally, and Pala. The district is part of the Kottayam (Lok Sabha) parliamentary constituency.',
+    metadata: {
+      source: 'CEO Kerala — Kottayam District Profile',
+      url: 'https://ceokerala.gov.in/kottayam',
+      lastUpdated: '2026-01-15',
+      section: 'District Info',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-004',
+    content:
+      'To find your polling booth, use the Electoral Search portal at electoralsearch.eci.gov.in. Enter your EPIC number or search by name, father\'s name, and age. You can also SMS your EPIC number to 1950.',
+    metadata: {
+      source: 'ECI — Booth Locator',
+      url: 'https://electoralsearch.eci.gov.in/',
+      lastUpdated: '2026-01-12',
+      section: 'Booth Locator',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-005',
+    content:
+      'Acceptable photo ID documents at polling booths include: (1) EPIC/Voter ID card, (2) Aadhaar, (3) Passport, (4) Driving License, (5) PAN card, (6) Smart Card issued by RGI under NPR, (7) MNREGA Job Card, (8) Health Insurance Smart Card (RSBY), (9) Bank/Post Office passbook with photo, (10) Service ID of PSU/Government employees, (11) Pension document with photo, (12) MP/MLA/MLC official identity card.',
+    metadata: {
+      source: 'ECI — Approved ID Documents',
+      url: 'https://eci.gov.in/voter-id-documents',
+      lastUpdated: '2025-12-20',
+      section: 'Voter ID',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-006',
+    content:
+      'SVEEP (Systematic Voters\' Education and Electoral Participation) is the flagship program of the Election Commission of India to enhance voter awareness, literacy, and participation. Activities include campus ambassadors, voter awareness forums, and cultural events.',
+    metadata: {
+      source: 'ECI — About SVEEP',
+      url: 'https://ecisveep.nic.in/',
+      lastUpdated: '2026-01-01',
+      section: 'About',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-007',
+    content:
+      'To report election violations, you can: (1) Use the cVIGIL mobile app, (2) Call the Election Commission helpline at 1950, (3) File a complaint at the nearest returning officer\'s office. Reports are tracked and acted upon within 100 minutes under the cVIGIL protocol.',
+    metadata: {
+      source: 'ECI — cVIGIL & Violation Reporting',
+      url: 'https://cvigil.eci.gov.in/',
+      lastUpdated: '2026-01-08',
+      section: 'Violations',
+    },
+    score: 0,
+    method: 'vector',
+  },
+  {
+    id: 'kb-008',
+    content:
+      'Kerala elections use Electronic Voting Machines (EVMs) with Voter Verifiable Paper Audit Trail (VVPAT). After pressing the button on the EVM, the VVPAT displays the candidate\'s name and symbol for 7 seconds, then drops the slip into a sealed box for verification if needed.',
+    metadata: {
+      source: 'ECI — EVM & VVPAT Guide',
+      url: 'https://eci.gov.in/evm-vvpat',
+      lastUpdated: '2025-11-15',
+      section: 'EVM',
+    },
+    score: 0,
+    method: 'vector',
+  },
+];
+
+// ── Load booth data into knowledge base ───────────────────────────
+
+function boothToPassage(booth: BoothRecord): RetrievedPassage {
+  return {
+    id: booth.id,
+    content: booth.content,
+    metadata: {
+      source: booth.source,
+      url: booth.sourceUrl,
+      lastUpdated: '2026-02-01',
+      section: `Polling Station ${booth.stationNumber}`,
+    },
+    score: 0,
+    method: 'vector',
+  };
+}
+
+// Merged knowledge base: 8 core + 171 booth entries
+let _mergedKB: RetrievedPassage[] | null = null;
+
+function getKnowledgeBase(): RetrievedPassage[] {
+  if (_mergedKB) return _mergedKB;
+  const boothPassages = getAllBooths().map(boothToPassage);
+  _mergedKB = [...CORE_KNOWLEDGE_BASE, ...boothPassages];
+  return _mergedKB;
+}
+
+/**
+ * Simple BM25-style keyword scoring
+ */
+function bm25Score(query: string, document: string): number {
+  const KB = getKnowledgeBase();
+  const queryTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const docTerms = document.toLowerCase().split(/\s+/);
+  const docLen = docTerms.length;
+  const avgDocLen = 200; // approximation
+  const k1 = 1.5;
+  const b = 0.75;
+
+  let score = 0;
+  for (const term of queryTerms) {
+    const tf = docTerms.filter((t) => t.includes(term)).length;
+    const idf = Math.log(1 + (KB.length - tf + 0.5) / (tf + 0.5));
+    const numerator = tf * (k1 + 1);
+    const denominator = tf + k1 * (1 - b + b * (docLen / avgDocLen));
+    score += idf * (numerator / denominator);
+  }
+  return score;
+}
+
+// ── Precomputed embeddings cache (lazy init) ──────────────────────
+let kbEmbeddings: number[][] | null = null;
+let kbEmbeddingsSize = 0;
+
+async function getKbEmbeddings(): Promise<number[][]> {
+  const KB = getKnowledgeBase();
+  if (kbEmbeddings && kbEmbeddingsSize === KB.length) return kbEmbeddings;
+  const cfg = getConfig();
+  if (!cfg.apiKey) {
+    kbEmbeddings = [];
+    kbEmbeddingsSize = 0;
+    return kbEmbeddings;
+  }
+  try {
+    // Batch embed in chunks of 32 to avoid overloading the API
+    const allEmbeddings: number[][] = [];
+    const BATCH_SIZE = 32;
+    const contents = KB.map((p) => p.content);
+    for (let i = 0; i < contents.length; i += BATCH_SIZE) {
+      const batch = contents.slice(i, i + BATCH_SIZE);
+      const result = await embedDocuments(batch);
+      allEmbeddings.push(...result.embeddings);
+    }
+    kbEmbeddings = allEmbeddings;
+    kbEmbeddingsSize = KB.length;
+    console.log(`[retriever] Embedded ${KB.length} knowledge base entries (${CORE_KNOWLEDGE_BASE.length} core + ${KB.length - CORE_KNOWLEDGE_BASE.length} booth)`);
+  } catch (err) {
+    console.warn('Failed to embed knowledge base, falling back to BM25-only:', err);
+    kbEmbeddings = [];
+    kbEmbeddingsSize = 0;
+  }
+  return kbEmbeddings;
+}
+
+/**
+ * Retrieve relevant passages using hybrid search.
+ * Returns top-15 candidates for reranking.
+ */
+export async function retrievePassages(
+  query: string,
+  locale: string,
+  maxTokens: number
+): Promise<RetrievalResult> {
+  const startTime = Date.now();
+  let queryEmbeddingLatencyMs = 0;
+
+  const KB = getKnowledgeBase();
+
+  // ── BM25 scoring ────────────────────────────────────────────
+  const bm25Scored = KB.map((passage) => ({
+    ...passage,
+    score: bm25Score(query, passage.content),
+    method: 'bm25' as const,
+  }));
+
+  // ── Vector scoring (if API key available) ───────────────────
+  const cfg = getConfig();
+  let vectorScored: (RetrievedPassage & { vectorScore: number })[] = [];
+
+  if (cfg.apiKey) {
+    try {
+      const embStart = Date.now();
+      const [queryEmb, kbEmbs] = await Promise.all([
+        embedQuery(query),
+        getKbEmbeddings(),
+      ]);
+      queryEmbeddingLatencyMs = Date.now() - embStart;
+
+      if (kbEmbs.length === KB.length) {
+        vectorScored = KB.map((passage, i) => ({
+          ...passage,
+          score: cosineSimilarity(queryEmb, kbEmbs[i]),
+          vectorScore: cosineSimilarity(queryEmb, kbEmbs[i]),
+          method: 'vector' as const,
+        }));
+      }
+    } catch (err) {
+      console.warn('Vector search failed, using BM25-only:', err);
+    }
+  }
+
+  // ── Hybrid merge ────────────────────────────────────────────
+  // Normalize BM25 scores to 0-1
+  const maxBm25 = Math.max(...bm25Scored.map((p) => p.score), 0.001);
+  const normalizedBm25 = bm25Scored.map((p) => ({
+    ...p,
+    score: p.score / maxBm25,
+  }));
+
+  // Merge: 0.4 * BM25 + 0.6 * vector (if available)
+  const merged = KB.map((passage, i) => {
+    const bm25 = normalizedBm25[i]?.score ?? 0;
+    const vector = vectorScored[i]?.vectorScore ?? 0;
+    const hasVector = vectorScored.length > 0;
+    const hybridScore = hasVector ? 0.4 * bm25 + 0.6 * vector : bm25;
+
+    return {
+      ...passage,
+      score: Math.round(hybridScore * 1000) / 1000,
+      method: (hasVector ? 'hybrid' : 'bm25') as 'hybrid' | 'bm25' | 'vector',
+    };
+  });
+
+  // Sort and take top 15
+  merged.sort((a, b) => b.score - a.score);
+  const top15 = merged.slice(0, 15);
+
+  // Token-budgeted selection
+  let tokenCount = 0;
+  const selectedPassages: RetrievedPassage[] = [];
+  for (const passage of top15) {
+    const tokens = passage.content.split(/\s+/).length * 1.3;
+    if (tokenCount + tokens > maxTokens) break;
+    tokenCount += tokens;
+    selectedPassages.push(passage);
+  }
+
+  const retrievalLatencyMs = Date.now() - startTime;
+
+  return {
+    passages: selectedPassages,
+    totalTokens: Math.round(tokenCount),
+    queryEmbeddingLatencyMs,
+    retrievalLatencyMs,
+  };
+}
