@@ -81,8 +81,8 @@ function isCircuitOpen(model: string): boolean {
 // ── Retry helper with exponential backoff ────────────────────────
 
 const TRANSIENT_STATUS_CODES = new Set([429, 502, 503]);
-const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1_000; // 1s, 2s, 4s
+const MAX_RETRIES = 2;
+const BASE_DELAY_MS = 500; // 500ms, 1s
 
 async function withRetry<T>(
   fn: () => Promise<T>,
@@ -103,7 +103,7 @@ async function withRetry<T>(
 
       if (!isTransient || attempt === MAX_RETRIES) throw err;
 
-      const delay = BASE_DELAY_MS * 2 ** attempt; // 1s, 2s, 4s
+      const delay = BASE_DELAY_MS * 2 ** attempt; // 500ms, 1s
       console.warn(
         `[fireworks] ${label} attempt ${attempt + 1} failed (${msg}), retrying in ${delay}ms…`
       );

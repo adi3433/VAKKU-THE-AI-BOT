@@ -299,38 +299,88 @@ function bm25Score(query: string, document: string): number {
   return score;
 }
 
-// ── Precomputed embeddings cache (lazy init) ──────────────────────
+// ── Precomputed embeddings cache (non-blocking background init) ───
 let kbEmbeddings: number[][] | null = null;
 let kbEmbeddingsSize = 0;
+let kbEmbeddingPromise: Promise<void> | null = null;
 
-async function getKbEmbeddings(): Promise<number[][]> {
-  const KB = getKnowledgeBase();
-  if (kbEmbeddings && kbEmbeddingsSize === KB.length) return kbEmbeddings;
-  const cfg = getConfig();
-  if (!cfg.apiKey) {
-    kbEmbeddings = [];
-    kbEmbeddingsSize = 0;
-    return kbEmbeddings;
-  }
-  try {
-    // Batch embed in chunks of 32 to avoid overloading the API
-    const allEmbeddings: number[][] = [];
+/**
+ * Start KB embedding in the background. Called once on first import.
+ * Does NOT block queries — if embeddings aren't ready, BM25 is used.
+ */
+function warmUpKbEmbeddings(): void {
+  if (kbEmbeddingPromise) return; // already running / done
+
+  kbEmbeddingPromise = (async () => {
+    const cfg = getConfig();
+    if (!cfg.apiKey) {
+      kbEmbeddings = [];
+      kbEmbeddingsSize = 0;
+      return;
+    }
+    const KB = getKnowledgeBase();
+    if (kbEmbeddings && kbEmbeddingsSize === KB.length) return;
+
     const BATCH_SIZE = 32;
     const contents = KB.map((p) => p.content);
+    const allEmbeddings: (number[] | null)[] = new Array(contents.length).fill(null);
+    let successCount = 0;
+    let failCount = 0;
+
+    // Embed each batch independently — failures skip that batch
     for (let i = 0; i < contents.length; i += BATCH_SIZE) {
       const batch = contents.slice(i, i + BATCH_SIZE);
-      const result = await embedDocuments(batch);
-      allEmbeddings.push(...result.embeddings);
+      try {
+        const result = await embedDocuments(batch);
+        for (let j = 0; j < result.embeddings.length; j++) {
+          allEmbeddings[i + j] = result.embeddings[j];
+        }
+        successCount += batch.length;
+      } catch (err) {
+        failCount += batch.length;
+        console.warn(`[retriever] KB embed batch ${i / BATCH_SIZE + 1} failed (${batch.length} passages), skipping:`, err instanceof Error ? err.message : err);
+        // Leave nulls for this batch — vector search will skip these passages
+      }
     }
-    kbEmbeddings = allEmbeddings;
-    kbEmbeddingsSize = KB.length;
-    console.log(`[retriever] Embedded ${KB.length} knowledge base entries (${CORE_KNOWLEDGE_BASE.length} core + ${KB.length - CORE_KNOWLEDGE_BASE.length} booth)`);
-  } catch (err) {
-    console.warn('Failed to embed knowledge base, falling back to BM25-only:', err);
-    kbEmbeddings = [];
-    kbEmbeddingsSize = 0;
+
+    // Only mark as ready if we got at least *some* embeddings
+    if (successCount > 0) {
+      // Replace nulls with zero-vectors so cosine similarity returns 0 for those
+      const dim = (allEmbeddings.find((e) => e !== null) as number[]).length;
+      kbEmbeddings = allEmbeddings.map((e) => e ?? new Array(dim).fill(0));
+      kbEmbeddingsSize = KB.length;
+      console.log(`[retriever] Embedded KB: ${successCount} ok, ${failCount} failed (${CORE_KNOWLEDGE_BASE.length} core + ${KB.length - CORE_KNOWLEDGE_BASE.length} booth)`);
+    } else {
+      console.warn('[retriever] All KB embedding batches failed, using BM25-only');
+      kbEmbeddings = [];
+      kbEmbeddingsSize = 0;
+    }
+  })();
+}
+
+// Kick off background embedding on module load (non-blocking)
+warmUpKbEmbeddings();
+
+/**
+ * Get KB embeddings if available. Never blocks — returns [] if still loading.
+ */
+async function getKbEmbeddings(): Promise<number[][]> {
+  const KB = getKnowledgeBase();
+
+  // Already cached and up to date
+  if (kbEmbeddings && kbEmbeddingsSize === KB.length) return kbEmbeddings;
+
+  // If background warm-up is running, wait up to 100ms then give up (use BM25)
+  if (kbEmbeddingPromise) {
+    await Promise.race([
+      kbEmbeddingPromise,
+      new Promise((r) => setTimeout(r, 100)),
+    ]);
+    if (kbEmbeddings && kbEmbeddingsSize === KB.length) return kbEmbeddings;
   }
-  return kbEmbeddings;
+
+  // Not ready yet — fall back to BM25 (empty array → vector search skipped)
+  return [];
 }
 
 /**
