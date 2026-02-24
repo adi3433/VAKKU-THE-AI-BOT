@@ -78,6 +78,41 @@ function isCircuitOpen(model: string): boolean {
   return c.open;
 }
 
+// ── Retry helper with exponential backoff ────────────────────────
+
+const TRANSIENT_STATUS_CODES = new Set([429, 502, 503]);
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1_000; // 1s, 2s, 4s
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+
+      // Only retry on transient HTTP errors
+      const isTransient = TRANSIENT_STATUS_CODES.has(
+        parseInt(msg.match(/\b(429|502|503)\b/)?.[1] || '0', 10)
+      );
+
+      if (!isTransient || attempt === MAX_RETRIES) throw err;
+
+      const delay = BASE_DELAY_MS * 2 ** attempt; // 1s, 2s, 4s
+      console.warn(
+        `[fireworks] ${label} attempt ${attempt + 1} failed (${msg}), retrying in ${delay}ms…`
+      );
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastErr; // unreachable but satisfies TS
+}
+
 // ── Headers helper ───────────────────────────────────────────────
 
 function authHeaders(): Record<string, string> {
@@ -132,48 +167,50 @@ export async function chatCompletion(opts: ChatCompletionOptions): Promise<ChatC
     throw new Error(`Circuit breaker open for model ${model}`);
   }
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), cfg.modelTimeoutMs);
-    const signal = opts.signal
-      ? opts.signal
-      : controller.signal;
+  return withRetry(async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), cfg.modelTimeoutMs);
+      const signal = opts.signal
+        ? opts.signal
+        : controller.signal;
 
-    const response = await fetch(cfg.chatUrl, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({
+      const response = await fetch(cfg.chatUrl, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          model,
+          messages: opts.messages,
+          max_tokens: opts.maxTokens ?? cfg.maxGenerationTokens,
+          temperature: opts.temperature ?? 0.3,
+          top_p: opts.topP ?? 0.9,
+          stream: false,
+        }),
+        signal,
+      });
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        throw new Error(`Fireworks ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      recordSuccess(model);
+
+      return {
+        text: data.choices?.[0]?.message?.content || '',
+        tokensUsed: data.usage?.total_tokens || 0,
+        promptTokens: data.usage?.prompt_tokens || 0,
+        completionTokens: data.usage?.completion_tokens || 0,
         model,
-        messages: opts.messages,
-        max_tokens: opts.maxTokens ?? cfg.maxGenerationTokens,
-        temperature: opts.temperature ?? 0.3,
-        top_p: opts.topP ?? 0.9,
-        stream: false,
-      }),
-      signal,
-    });
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`Fireworks ${response.status}: ${errText}`);
+        finishReason: data.choices?.[0]?.finish_reason || 'unknown',
+      };
+    } catch (err) {
+      recordFailure(model);
+      throw err;
     }
-
-    const data = await response.json();
-    recordSuccess(model);
-
-    return {
-      text: data.choices?.[0]?.message?.content || '',
-      tokensUsed: data.usage?.total_tokens || 0,
-      promptTokens: data.usage?.prompt_tokens || 0,
-      completionTokens: data.usage?.completion_tokens || 0,
-      model,
-      finishReason: data.choices?.[0]?.finish_reason || 'unknown',
-    };
-  } catch (err) {
-    recordFailure(model);
-    throw err;
-  }
+  }, 'chatCompletion');
 }
 
 /**
@@ -266,39 +303,41 @@ export async function createEmbeddings(
     throw new Error(`Circuit breaker open for model ${embModel}`);
   }
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), cfg.modelTimeoutMs);
+  return withRetry(async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), cfg.modelTimeoutMs);
 
-    const response = await fetch(cfg.embeddingUrl, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({
+      const response = await fetch(cfg.embeddingUrl, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          model: embModel,
+          input: texts,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        throw new Error(`Fireworks embeddings ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      recordSuccess(embModel);
+
+      return {
+        embeddings: data.data.map((d: { embedding: number[] }) => d.embedding),
+        tokensUsed: data.usage?.total_tokens || 0,
         model: embModel,
-        input: texts,
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`Fireworks embeddings ${response.status}: ${errText}`);
+      };
+    } catch (err) {
+      recordFailure(embModel);
+      throw err;
     }
-
-    const data = await response.json();
-    recordSuccess(embModel);
-
-    return {
-      embeddings: data.data.map((d: { embedding: number[] }) => d.embedding),
-      tokensUsed: data.usage?.total_tokens || 0,
-      model: embModel,
-    };
-  } catch (err) {
-    recordFailure(embModel);
-    throw err;
-  }
+  }, 'createEmbeddings');
 }
 
 // ── Audio Transcription (Whisper V3) ─────────────────────────────
@@ -325,41 +364,43 @@ export async function transcribeAudio(
     throw new Error(`Circuit breaker open for model ${asrModel}`);
   }
 
-  try {
-    const formData = new FormData();
-    const blob =
-      audioData instanceof Blob ? audioData : new Blob([new Uint8Array(audioData)], { type: 'audio/webm' });
-    formData.append('file', blob, filename);
-    formData.append('model', asrModel);
-    formData.append('response_format', 'verbose_json');
+  return withRetry(async () => {
+    try {
+      const formData = new FormData();
+      const blob =
+        audioData instanceof Blob ? audioData : new Blob([new Uint8Array(audioData)], { type: 'audio/webm' });
+      formData.append('file', blob, filename);
+      formData.append('model', asrModel);
+      formData.append('response_format', 'verbose_json');
 
-    const response = await fetch(cfg.audioTranscribeUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${cfg.apiKey}`,
-        // No Content-Type — FormData sets boundary automatically
-      },
-      body: formData,
-    });
+      const response = await fetch(cfg.audioTranscribeUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${cfg.apiKey}`,
+          // No Content-Type — FormData sets boundary automatically
+        },
+        body: formData,
+      });
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => '');
-      throw new Error(`Fireworks ASR ${response.status}: ${errText}`);
+      if (!response.ok) {
+        const errText = await response.text().catch(() => '');
+        throw new Error(`Fireworks ASR ${response.status}: ${errText}`);
+      }
+
+      const data = await response.json();
+      recordSuccess(asrModel);
+
+      return {
+        text: data.text || '',
+        language: data.language || 'unknown',
+        duration: data.duration || 0,
+        model: asrModel,
+      };
+    } catch (err) {
+      recordFailure(asrModel);
+      throw err;
     }
-
-    const data = await response.json();
-    recordSuccess(asrModel);
-
-    return {
-      text: data.text || '',
-      language: data.language || 'unknown',
-      duration: data.duration || 0,
-      model: asrModel,
-    };
-  } catch (err) {
-    recordFailure(asrModel);
-    throw err;
-  }
+  }, 'transcribeAudio');
 }
 
 // ── Token Estimation ─────────────────────────────────────────────
