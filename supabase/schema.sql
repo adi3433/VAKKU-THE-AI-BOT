@@ -57,7 +57,40 @@ CREATE INDEX IF NOT EXISTS idx_memory_type ON memory_entries (user_id, type);
 CREATE INDEX IF NOT EXISTS idx_memory_expires ON memory_entries (expires_at)
   WHERE expires_at IS NOT NULL;
 
--- ── 4. Auto-update updated_at trigger ────────────────────────
+-- ── 4. Violation Reports ─────────────────────────────────────
+-- Stores violation reports submitted via /api/report
+CREATE TABLE IF NOT EXISTS violation_reports (
+  id               TEXT PRIMARY KEY,
+  reference_number TEXT NOT NULL UNIQUE,
+  user_id          TEXT,
+  session_id       TEXT,
+  type             TEXT NOT NULL DEFAULT 'other', -- 'bribery' | 'intimidation' | 'misuse_of_power' | 'fake_news' | 'booth_capture' | 'other'
+  description      TEXT NOT NULL,
+  location         JSONB,                          -- { lat, lng, address }
+  media_ids        TEXT[] NOT NULL DEFAULT '{}',
+  locale           TEXT NOT NULL DEFAULT 'en',
+  status           TEXT NOT NULL DEFAULT 'submitted', -- 'submitted' | 'under_review' | 'resolved' | 'dismissed'
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_reference ON violation_reports (reference_number);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON violation_reports (status);
+CREATE INDEX IF NOT EXISTS idx_reports_created ON violation_reports (created_at DESC);
+
+-- ── 5. FAQ Analytics (optional) ──────────────────────────────
+-- Track FAQ hits for analytics
+CREATE TABLE IF NOT EXISTS faq_analytics (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  faq_key    TEXT NOT NULL,
+  locale     TEXT NOT NULL DEFAULT 'en',
+  session_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_faq_analytics_key ON faq_analytics (faq_key);
+
+-- ── 6. Auto-update updated_at trigger ────────────────────────
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -74,11 +107,17 @@ CREATE TRIGGER memory_consent_updated_at
   BEFORE UPDATE ON memory_consent
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- ── 5. Row Level Security (RLS) ─────────────────────────────
+CREATE TRIGGER violation_reports_updated_at
+  BEFORE UPDATE ON violation_reports
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── 7. Row Level Security (RLS) ─────────────────────────────
 -- Enable RLS on all tables (service-role key bypasses RLS)
 ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memory_consent ENABLE ROW LEVEL SECURITY;
 ALTER TABLE memory_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE violation_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE faq_analytics ENABLE ROW LEVEL SECURITY;
 
 -- Policy: service role has full access (API routes use service key)
 -- If you want client-side access via anon key, add policies like:

@@ -104,7 +104,7 @@ export default function SettingsPage() {
 
             <div className="mt-6 space-y-4">
               {/* Language */}
-              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5">
+              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5">
                 <h2 className={`text-sm font-semibold text-[var(--color-neutral-700)] ${isMl ? 'font-ml' : ''}`}>
                   {t.language}
                 </h2>
@@ -114,7 +114,7 @@ export default function SettingsPage() {
                     className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition-colors ${
                       !isMalayalam
                         ? 'bg-[var(--color-primary-500)] text-white'
-                        : 'border border-[var(--color-neutral-200)] bg-white text-[var(--color-neutral-600)]'
+                        : 'border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] text-[var(--color-neutral-600)]'
                     }`}
                   >
                     English
@@ -124,7 +124,7 @@ export default function SettingsPage() {
                     className={`flex-1 rounded-lg py-2.5 text-sm font-medium font-ml transition-colors ${
                       isMalayalam
                         ? 'bg-[var(--color-primary-500)] text-white'
-                        : 'border border-[var(--color-neutral-200)] bg-white text-[var(--color-neutral-600)]'
+                        : 'border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] text-[var(--color-neutral-600)]'
                     }`}
                   >
                     മലയാളം
@@ -133,7 +133,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Memory */}
-              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5">
+              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5">
                 <h2 className={`text-sm font-semibold text-[var(--color-neutral-700)] ${isMl ? 'font-ml' : ''}`}>
                   {isMl ? 'മെമ്മറി' : 'Memory'}
                 </h2>
@@ -157,7 +157,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Accessibility */}
-              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5">
+              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5">
                 <h2 className={`text-sm font-semibold text-[var(--color-neutral-700)] ${isMl ? 'font-ml' : ''}`}>
                   {t.accessibility}
                 </h2>
@@ -178,7 +178,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Privacy */}
-              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5">
+              <div className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5">
                 <h2 className={`text-sm font-semibold text-[var(--color-neutral-700)] ${isMl ? 'font-ml' : ''}`}>
                   {isMl ? 'സ്വകാര്യത' : 'Privacy'}
                 </h2>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleExport}
                     disabled={exportLoading}
-                    className="rounded-lg border border-[var(--color-neutral-200)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)] transition-colors disabled:opacity-50"
+                    className="rounded-lg border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-4 py-2 text-sm font-medium text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)] transition-colors disabled:opacity-50"
                   >
                     {exportLoading
                       ? (isMl ? 'എക്‌സ്‌പോർട്ട്...' : 'Exporting...')
@@ -198,7 +198,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleDelete}
                     disabled={deleteLoading}
-                    className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="rounded-lg border border-red-200 dark:border-red-800 bg-[var(--surface-primary)] px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
                   >
                     {deleteLoading
                       ? (isMl ? 'ഇല്ലാതാക്കുന്നു...' : 'Deleting...')

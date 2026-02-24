@@ -1,0 +1,252 @@
+{
+  "metadata": {
+    "dataset_name": "voting_rules",
+    "version": "1.0",
+    "district": "Kottayam",
+    "state": "Kerala",
+    "system": "Vaakku V5",
+    "description": "ECI-standardised voting day rules, allowed ID documents, poll timings, EVM/VVPAT guidance, prohibited items, and PwD/elderly facilities.",
+    "source": "Election Commission of India — https://ecisveep.nic.in/voters/how-to-vote/ | https://www.ceo.kerala.gov.in",
+    "last_updated": "2026-02-23",
+    "note": "Rules are standardised across all Indian state elections. Kerala-specific details noted where applicable."
+  },
+
+  "poll_timings": {
+    "general": {
+      "start": "7:00 AM",
+      "end": "6:00 PM",
+      "note": "Timings are standard for Kerala Assembly elections. Final timings will be confirmed in official notification."
+    },
+    "last_voter_rule": "Any voter who is present in the queue at 6:00 PM is entitled to cast their vote even if it extends beyond closing time.",
+    "mock_poll": {
+      "time": "Before 7:00 AM (typically 5:30 AM – 6:30 AM)",
+      "purpose": "EVM/VVPAT functionality is publicly tested before the actual poll begins. Agents and observers can witness this."
+    }
+  },
+
+  "allowed_photo_id_documents": {
+    "description": "Voters must carry any ONE of the following valid photo ID documents to the polling station.",
+    "primary_id": {
+      "name": "Elector Photo Identity Card (EPIC / Voter ID)",
+      "note": "This is the preferred document. Carry it if you have one."
+    },
+    "alternative_ids": [
+      {
+        "id": 1,
+        "document": "Aadhaar Card"
+      },
+      {
+        "id": 2,
+        "document": "MNREGA Job Card issued by State Government"
+      },
+      {
+        "id": 3,
+        "document": "Passbooks with photograph issued by Bank / Post Office"
+      },
+      {
+        "id": 4,
+        "document": "Health Insurance Smart Card issued under Ministry of Labour scheme"
+      },
+      {
+        "id": 5,
+        "document": "Driving Licence"
+      },
+      {
+        "id": 6,
+        "document": "PAN Card"
+      },
+      {
+        "id": 7,
+        "document": "Smart Card issued by RGI under NPR"
+      },
+      {
+        "id": 8,
+        "document": "Indian Passport"
+      },
+      {
+        "id": 9,
+        "document": "Pension Document with photograph"
+      },
+      {
+        "id": 10,
+        "document": "Service Identity Card with photograph issued by Central / State Govt / PSUs / Public Ltd Companies"
+      },
+      {
+        "id": 11,
+        "document": "Unique Disability ID (UDID) Card issued by Ministry of Social Justice and Empowerment"
+      },
+      {
+        "id": 12,
+        "document": "Overseas Voter (NRI): Original Passport only (no alternative accepted)"
+      }
+    ],
+    "important_note": "The name in the document must match the name in the electoral roll. Expired driving licences and expired passports are generally NOT accepted."
+  },
+
+  "polling_slip": {
+    "description": "A Voter Slip (polling slip) is distributed by the BLO or political parties before election day.",
+    "purpose": "It tells the voter their booth number, serial number in roll, and polling station address.",
+    "is_sufficient_alone": false,
+    "note": "Polling slip alone is NOT sufficient to vote. A valid photo ID from the approved list must also be carried."
+  },
+
+  "step_by_step_voting_process": [
+    {
+      "step": 1,
+      "action": "Arrive at your assigned polling station",
+      "detail": "Find your booth using your polling slip, Voter ID, or the Voter Helpline 1950 / CEO Kerala website."
+    },
+    {
+      "step": 2,
+      "action": "Join the queue",
+      "detail": "Separate queues may be available for general voters, senior citizens, and PwD voters. PwD voters get priority access."
+    },
+    {
+      "step": 3,
+      "action": "Show photo ID to polling officer at Table 1",
+      "detail": "Polling officer verifies your name in the marked copy of the electoral roll."
+    },
+    {
+      "step": 4,
+      "action": "Indelible ink mark applied",
+      "detail": "Ink is applied on the left index finger (or as designated). This prevents double voting."
+    },
+    {
+      "step": 5,
+      "action": "Sign or thumb impression in register",
+      "detail": "You sign the voter register (Form 17A) to confirm your identity."
+    },
+    {
+      "step": 6,
+      "action": "Receive ballot number slip from Table 2",
+      "detail": "Polling officer issues a ballot number slip to allow you to proceed to the EVM."
+    },
+    {
+      "step": 7,
+      "action": "Press button on EVM",
+      "detail": "Enter the voting compartment. Press the button on the Ballot Unit next to your chosen candidate's name/symbol. A beep confirms your vote."
+    },
+    {
+      "step": 8,
+      "action": "Verify vote on VVPAT",
+      "detail": "A paper slip will appear in the transparent VVPAT window showing the candidate's name and symbol. It is visible for approximately 7 seconds before being cut and stored in the sealed VVPAT box."
+    },
+    {
+      "step": 9,
+      "action": "Exit the polling station",
+      "detail": "Your vote has been cast. Do not linger inside the polling station."
+    }
+  ],
+
+  "evm_vvpat_explanation": {
+    "evm": {
+      "full_form": "Electronic Voting Machine",
+      "components": ["Control Unit (with Polling Officer)", "Ballot Unit (with Voter)"],
+      "how_it_works": "The Ballot Unit shows candidate names and symbols. Pressing the button next to a candidate casts one vote. Each EVM can record a maximum of 2000 votes and support up to 64 candidates.",
+      "tamper_proof": "EVMs are standalone devices with no network connectivity. They cannot be hacked remotely."
+    },
+    "vvpat": {
+      "full_form": "Voter Verifiable Paper Audit Trail",
+      "purpose": "Provides a physical paper verification that the vote was recorded for the intended candidate.",
+      "visibility": "The printed slip is visible through a transparent window for approximately 7 seconds.",
+      "storage": "Slip is automatically cut and stored in a sealed box — cannot be removed by voter.",
+      "auditability": "VVPAT slips can be counted/audited by ECI order to verify EVM results."
+    }
+  },
+
+  "prohibited_items_at_polling_station": [
+    "Mobile phones (inside voting compartment — may be allowed in premises, rules vary by state)",
+    "Cameras or recording devices",
+    "Weapons, firearms, or sharp objects",
+    "Party flags, banners, or campaign materials",
+    "Liquor or any intoxicants",
+    "Unauthorised persons (non-voters, media without authorization)"
+  ],
+
+  "prohibited_activities_on_poll_day": [
+    "Campaigning or canvassing within 100 metres of a polling station",
+    "Displaying election symbols or party flags near the booth",
+    "Distributing money, gifts, or liquor",
+    "Taking photographs or videos inside the voting compartment",
+    "Interfering with a voter's right to vote in secret",
+    "Carrying weapons near a polling station (Section 144 CrPC applies)"
+  ],
+
+  "silence_period": {
+    "description": "No campaign activity of any kind is allowed during the silence period.",
+    "duration": "48 hours before the scheduled closing of polls",
+    "applies_to": "All political parties, candidates, and their representatives"
+  },
+
+  "pwd_and_elderly_facilities": {
+    "title": "Facilities for Persons with Disabilities (PwD) and Senior Citizens",
+    "facilities": [
+      {
+        "facility": "Wheelchair Access",
+        "detail": "All polling stations must have ramp access for wheelchair users."
+      },
+      {
+        "facility": "Priority Queuing",
+        "detail": "PwD voters and senior citizens (80+) are entitled to vote without waiting in the general queue."
+      },
+      {
+        "facility": "Companion Assistance",
+        "detail": "A voter with a disability may be accompanied by a companion of their choice (18+ years) to assist in the voting compartment."
+      },
+      {
+        "facility": "BLO Escort",
+        "detail": "Booth Level Officers may be assigned to assist PwD/elderly voters reach the polling station in some constituencies."
+      },
+      {
+        "facility": "Braille EVM Ballot Sheet",
+        "detail": "Braille stickers on ballot units are available for visually impaired voters at accessible booths."
+      },
+      {
+        "facility": "Home Voting (Postal Ballot for 85+ and PwD)",
+        "detail": "Voters aged 85 and above and voters with 40%+ disability are eligible to cast vote via postal ballot from home. Apply to ERO before deadline."
+      },
+      {
+        "facility": "Accessible Polling Station Design",
+        "detail": "ECI mandates that all polling stations be on the ground floor or have ramp access. Signage, furniture, and layout must be accessible."
+      }
+    ],
+    "helpline": "1950"
+  },
+
+  "tender_vote": {
+    "description": "If someone else has already voted in your name (impersonation), you are entitled to cast a Tender Vote.",
+    "process": "Inform the Presiding Officer immediately. A Tender Ballot Paper (pink) will be issued. Your tender vote is kept separately and counted only if there is evidence of impersonation.",
+    "note": "Your vote is protected. You will not be turned away."
+  },
+
+  "indelible_ink_rules": {
+    "applied_on": "Left index finger (or as designated by Presiding Officer)",
+    "purpose": "Prevents a person from voting more than once",
+    "permanence": "The ink is permanent and cannot be washed off easily — it fades over several weeks"
+  },
+
+  "vaakku_bot_behaviour": {
+    "can_do": [
+      "Tell voter their booth location",
+      "List accepted ID documents",
+      "Explain poll timings",
+      "Walk through step-by-step voting process",
+      "Explain EVM/VVPAT",
+      "List prohibited items",
+      "Describe PwD and elderly facilities"
+    ],
+    "cannot_do": [
+      "Recommend which candidate or party to vote for",
+      "Predict election results",
+      "Provide opinions on political parties or candidates",
+      "Access or confirm whether a specific person voted"
+    ]
+  },
+
+  "resources": {
+    "voter_helpline": "1950",
+    "ceo_kerala": "https://www.ceo.kerala.gov.in",
+    "eci_sveep": "https://ecisveep.nic.in/voters/how-to-vote/",
+    "voter_portal": "https://voters.eci.gov.in"
+  }
+}

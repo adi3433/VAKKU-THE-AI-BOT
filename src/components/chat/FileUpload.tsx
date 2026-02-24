@@ -156,7 +156,7 @@ export function FileUpload({ onUpload, disabled = false }: FileUploadProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="absolute bottom-14 left-0 z-20 w-72 rounded-xl border border-[var(--color-neutral-200)] bg-white p-4 shadow-lg"
+            className="absolute bottom-14 left-0 z-20 w-72 rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] p-4 shadow-lg"
           >
             {!pendingUpload ? (
               <>
@@ -183,14 +183,14 @@ export function FileUpload({ onUpload, disabled = false }: FileUploadProps) {
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-neutral-200)] bg-white py-2 text-xs font-medium text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)] transition-colors"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] py-2 text-xs font-medium text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)] transition-colors"
                   >
                     <DocumentIcon className="h-4 w-4" />
                     {isMl ? 'ഫയൽ' : 'File'}
                   </button>
                   <button
                     onClick={() => cameraInputRef.current?.click()}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-neutral-200)] bg-white py-2 text-xs font-medium text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)] transition-colors"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] py-2 text-xs font-medium text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)] transition-colors"
                   >
                     <CameraIcon className="h-4 w-4" />
                     {isMl ? 'ക്യാമറ' : 'Camera'}

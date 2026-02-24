@@ -1,0 +1,299 @@
+{
+  "metadata": {
+    "dataset_name": "voter_services",
+    "version": "1.0",
+    "district": "Kottayam",
+    "state": "Kerala",
+    "issuing_authority": "Election Commission of India",
+    "system": "Vaakku V5",
+    "description": "Consolidated ECI voter service forms dataset for intent-based routing, document checklist generation, and process guidance.",
+    "last_updated": "2026-02-23",
+    "total_forms": 6
+  },
+
+  "intent_routing_map": {
+    "new_voter_registration": "Form-6",
+    "overseas_voter_registration": "Form-6A",
+    "objection_to_inclusion_or_deletion": "Form-7",
+    "deletion_request_self": "Form-7",
+    "remove_deceased_voter": "Form-7",
+    "name_correction": "Form-8",
+    "address_correction": "Form-8",
+    "shifted_residence": "Form-8",
+    "epic_replacement_lost": "Form-8",
+    "epic_replacement_damaged": "Form-8",
+    "pwd_marking": "Form-8",
+    "migrant_voter_intimation_notified": "Form-12C",
+    "migrant_voter_intimation_general": "Form-M"
+  },
+
+  "forms": {
+
+    "Form-6": {
+      "title": "Application for New Voter Registration",
+      "form_number": "Form-6",
+      "issuing_authority": "Election Commission of India",
+      "legal_reference": "Rules 13(1) and 13(26) of the Registration of Electors Rules, 1960",
+      "purpose": "Inclusion of name in the electoral roll for first-time voters or those not enrolled anywhere.",
+      "who_should_use": [
+        "First-time voters turning 18",
+        "Citizens not enrolled in any electoral roll",
+        "Citizens who have never registered before"
+      ],
+      "addressed_to": "Electoral Registration Officer (ERO) of the applicant's Assembly Constituency",
+      "key_fields": {
+        "applicant_name": "Full name in official language and English block letters",
+        "relative_details": "Father / Mother / Husband / Wife / Legal Guardian / Guru (for third gender)",
+        "contact": "Mobile and email of self or listed relative",
+        "aadhaar": "Aadhaar number or reason for non-furnishing",
+        "gender": "Male / Female / Third Gender",
+        "date_of_birth": "DD/MM/YYYY with proof document",
+        "present_ordinary_residence": "Full address with PIN code",
+        "disability_details": "Optional — Locomotive, Visual, Deaf & Dumb, Other",
+        "family_member_in_roll": "Name, relationship, EPIC number of existing enrolled family member"
+      },
+      "required_documents": {
+        "photograph": "One recent unsigned passport size color photograph (4.5cm x 3.5cm, white background, frontal face)",
+        "age_proof_any_one": [
+          "Birth certificate from local body",
+          "Aadhaar card",
+          "PAN card",
+          "Driving licence",
+          "Class X or XII certificate with DOB",
+          "Indian Passport"
+        ],
+        "address_proof_any_one": [
+          "Water / electricity / gas connection bill (at least 1 year old)",
+          "Aadhaar card",
+          "Bank or Post Office passbook",
+          "Indian Passport",
+          "Revenue department land records / Kisan Bahi",
+          "Registered rent/lease deed (for tenants)",
+          "Registered sale deed (for own house)"
+        ],
+        "notes": "All documents must be self-attested copies. Field verification will be conducted if no document is available."
+      },
+      "online_portal": "https://voters.eci.gov.in",
+      "nvsp_portal": "https://www.nvsp.in",
+      "estimated_processing_time": "15–30 days after submission",
+      "declaration_penalty": "False declaration punishable under Section 31 of Representation of the People Act, 1950 — imprisonment up to 1 year or fine or both",
+      "accessibility_note": "For persons with intellectual disability, autism, cerebral palsy, or multiple disabilities — signature or left thumb impression of the person or their legal guardian is accepted as per RPWD Act 2016."
+    },
+
+    "Form-6A": {
+      "title": "Application for Inclusion of Name by Overseas Elector",
+      "form_number": "Form-6A",
+      "issuing_authority": "Election Commission of India",
+      "legal_reference": "Rule 8B of Registration of Electors Rules, 1960",
+      "purpose": "Registration as an overseas (NRI) voter in the constituency where the applicant's Indian passport address is located.",
+      "who_should_use": [
+        "Indian citizens residing abroad",
+        "Must NOT have acquired citizenship of any foreign country",
+        "Must have completed 18 years as on 1st January of the year of application"
+      ],
+      "addressed_to": "Electoral Registration Officer of the Assembly/Parliamentary Constituency",
+      "key_fields": {
+        "personal": "Name, last name, relative's name, DOB, place of birth, gender",
+        "contact": "Email ID and mobile number (optional)",
+        "india_address": "Address as mentioned in Indian passport",
+        "passport_details": "Passport number, place of issue, date of issue and expiry",
+        "visa_details": "Visa number, date of issue/expiry, type, issuing authority",
+        "reason_of_absence": "Employment / Education / Other",
+        "current_address_abroad": "Full address in country of residence"
+      },
+      "required_documents": {
+        "photograph": "One recent passport size photo (3.5cm x 3.5cm, white/light background, full face)",
+        "passport_copies_self_attested": [
+          "Page with applicant photo and personal details",
+          "Page with address in India (as in passport)",
+          "Page with current valid visa endorsement"
+        ],
+        "if_in_person": "Original passport must be produced for verification (returned immediately after)"
+      },
+      "submission_modes": [
+        "In person to ERO",
+        "By post to ERO",
+        "Online via NVSP: https://www.nvsp.in",
+        "Online via CEO Kerala: https://www.ceo.kerala.gov.in"
+      ],
+      "voting_note": "After enrolment, overseas voter must be physically present at the polling station with original passport on poll day to cast vote.",
+      "estimated_processing_time": "Variable — 30–60 days",
+      "declaration_penalty": "False declaration punishable under Section 31 of Representation of the People Act, 1950",
+      "undertakings": [
+        "Will immediately inform ERO if Indian citizenship is renounced",
+        "Will inform ERO of any change in overseas address",
+        "Will inform ERO upon returning to ordinary residence in India"
+      ]
+    },
+
+    "Form-7": {
+      "title": "Application for Objection for Proposed Inclusion / Deletion of Name in Electoral Roll",
+      "form_number": "Form-7",
+      "issuing_authority": "Election Commission of India",
+      "legal_reference": "Rules 13(2) and 13(26) of the Registration of Electors Rules, 1960",
+      "purpose": "To raise objection to proposed inclusions or to request deletion of a name from the electoral roll.",
+      "who_should_use": [
+        "Any registered voter who wants to report an incorrect/fraudulent entry",
+        "Family members requesting deletion of a deceased voter",
+        "Voters requesting deletion of their own name (e.g., shifted permanently)"
+      ],
+      "addressed_to": "Electoral Registration Officer (ERO) of the Assembly Constituency",
+      "objection_types": {
+        "delete_existing": {
+          "description": "Request deletion of a name already in the current roll",
+          "valid_reasons": ["Death", "Under Age", "Absent / Permanently shifted", "Already enrolled elsewhere", "Not an Indian Citizen"],
+          "death_certificate_required": true
+        },
+        "object_proposed_inclusion": {
+          "description": "Object to a proposed new inclusion in the roll",
+          "valid_reasons": ["Death", "Under Age", "Absent / Permanently shifted", "Already enrolled elsewhere", "Not an Indian Citizen"]
+        },
+        "delete_self": {
+          "description": "Request deletion of own name",
+          "valid_reasons": ["Permanently shifted", "Already enrolled elsewhere", "Not an Indian Citizen"]
+        }
+      },
+      "key_fields": {
+        "applicant": "Name, EPIC number, mobile number",
+        "person_subject_to_objection": "Name, surname, EPIC number, full address"
+      },
+      "required_documents": {
+        "for_death_cases": "Death certificate (mandatory)",
+        "for_other_cases": "Supporting evidence as applicable"
+      },
+      "online_portal": "https://voters.eci.gov.in",
+      "estimated_processing_time": "15–30 days",
+      "declaration_penalty": "False declaration punishable under Section 31 of Representation of the People Act, 1950 — imprisonment up to 1 year or fine or both",
+      "accessibility_note": "Persons with intellectual disability, autism, cerebral palsy, or multiple disabilities may use legal guardian's signature."
+    },
+
+    "Form-8": {
+      "title": "Application for Shifting of Residence / Correction of Entries / Replacement of EPIC / Marking of PwD",
+      "form_number": "Form-8",
+      "issuing_authority": "Election Commission of India",
+      "legal_reference": "Rules 13(3) and 13(26) of the Registration of Electors Rules, 1960",
+      "purpose": "Multiple voter service update requests — address change, name/details correction, EPIC replacement, or PwD disability marking.",
+      "who_should_use": [
+        "Voters who have shifted residence within or across constituency",
+        "Voters with incorrect details (name, DOB, gender, photo, etc.) in the roll",
+        "Voters whose EPIC is lost, destroyed, or mutilated",
+        "Voters with disabilities seeking PwD marking on EPIC"
+      ],
+      "addressed_to": "Electoral Registration Officer (ERO) of the Assembly Constituency",
+      "application_sections": {
+        "section_1_shifting_of_residence": {
+          "applicable_when": "Voter has physically shifted residence",
+          "action": "Name deleted from old address and added at new address; replacement EPIC issued",
+          "required_address_proof_any_one": [
+            "Water / electricity / gas bill (at least 1 year old)",
+            "Aadhaar card",
+            "Current passbook of nationalised/scheduled bank or Post Office",
+            "Indian Passport",
+            "Revenue department land records including Kisan Bahi",
+            "Registered rent/lease deed (for tenant)",
+            "Registered sale deed (for own house)"
+          ],
+          "old_epic_to_be_returned": true
+        },
+        "section_2_correction_of_entries": {
+          "applicable_when": "Any detail in the electoral roll is incorrect",
+          "max_corrections_per_application": 4,
+          "correctable_fields": ["Name", "Gender", "Date of Birth / Age", "Relation type", "Relation name", "Address", "Mobile number", "Photo"],
+          "required": "Self-attested documentary proof for each correction",
+          "photo_correction": "New passport size photo (4.5cm x 3.5cm, white background) required only if photo is being changed",
+          "replacement_epic_can_be_requested": true
+        },
+        "section_3_replacement_epic": {
+          "applicable_when": "Original EPIC is lost, destroyed, or mutilated",
+          "valid_reasons": ["Lost", "Destroyed due to floods/fire/natural disaster", "Mutilated"],
+          "if_mutilated": "Return mutilated EPIC with application",
+          "if_lost_or_destroyed": [
+            "Attach copy of FIR / police report",
+            "Submit undertaking to return EPIC if recovered"
+          ]
+        },
+        "section_4_marking_pwd": {
+          "applicable_when": "Voter has a disability and wants it marked on EPIC",
+          "disability_categories": ["Locomotive", "Visual", "Deaf & Dumb", "Other (describe)"],
+          "required": "Disability certificate with percentage of disability"
+        }
+      },
+      "aadhaar_field": "Aadhaar number required; if unavailable, reason must be stated",
+      "online_portal": "https://voters.eci.gov.in",
+      "estimated_processing_time": "15–30 days",
+      "declaration_penalty": "False declaration punishable under Section 31 of Representation of the People Act, 1950 — imprisonment up to 1 year or fine or both",
+      "accessibility_note": "Persons with intellectual disability, autism, cerebral palsy, or multiple disabilities may use legal guardian's signature as per RPWD Act 2016."
+    },
+
+    "Form-12C": {
+      "title": "Letter of Intimation to Assistant Returning Officer for Notified Class of Electors",
+      "form_number": "Form-12C",
+      "issuing_authority": "Election Commission of India",
+      "legal_reference": "Rule 27-C of the Conduct of Elections Rules, 1961",
+      "purpose": "Intimation by notified class of electors (migrants — registered/government employees/pensioners) to cast vote at a special polling station in their area of current residence.",
+      "who_should_use": [
+        "Migrants registered with a government authority",
+        "Government employees serving away from home constituency",
+        "Pensioners drawing pension from a treasury/bank away from home constituency"
+      ],
+      "parts": {
+        "part_I": {
+          "title": "Letter of Intimation by Applicant",
+          "addressed_to": "Assistant Returning Officer (for notified class of electors)",
+          "fields": {
+            "applicant_details": "Name, relation, place of ordinary residence",
+            "present_postal_address": "Current full address with PIN",
+            "electoral_roll_details": "Serial number, part number, constituency",
+            "migrant_status": "Registered migrant / Government employee / Pensioner",
+            "government_employee_details": "Designation, office address (if applicable)",
+            "pensioner_details": "Pension account number, treasury/bank address (if applicable)"
+          }
+        },
+        "part_II": {
+          "title": "Certificate by Attesting Officer",
+          "certifier": "Officer in-charge of migrant camp/office/area OR head of office where applicant serves OR treasury officer/bank manager OR any Gazetted Officer",
+          "content": "Certifies that particulars given in Part I are correct as per records"
+        }
+      },
+      "note": "Strike off whichever is not applicable. Substituted vide Notification No. S.O. 628(E), dated 4th August, 1999."
+    },
+
+    "Form-M": {
+      "title": "Letter of Intimation to Assistant Returning Officer for Migrant Voters",
+      "form_number": "Form-M",
+      "issuing_authority": "Election Commission of India",
+      "purpose": "Migrant voters wishing to cast vote in person at a special polling station in their current city/location can submit this intimation to the ARO.",
+      "who_should_use": [
+        "Migrant voters enrolled in their home constituency but currently residing elsewhere",
+        "Can submit for self and family members on a single form (up to 4 voters)"
+      ],
+      "addressed_to": "Assistant Returning Officer (For Migrants)",
+      "key_fields": {
+        "polling_station_location": "Location/city of desired polling station",
+        "voter_table": [
+          "Name",
+          "Father's / Mother's / Husband's name",
+          "Name of Parliamentary / Assembly Constituency",
+          "Name of Assembly Segment",
+          "Part number of electoral roll",
+          "Serial number in that part"
+        ],
+        "present_address": "Full current residential address",
+        "max_voters_per_form": 4
+      },
+      "certification": "Applicant certifies that all particulars given are correct to the best of their knowledge and belief.",
+      "note": "This form is for in-person voting at a migrant polling station. It does not change the voter's registered constituency."
+    }
+
+  },
+
+  "common_resources": {
+    "voter_helpline": "1950",
+    "eci_portal": "https://www.eci.gov.in",
+    "voter_portal": "https://voters.eci.gov.in",
+    "nvsp_portal": "https://www.nvsp.in",
+    "ceo_kerala": "https://www.ceo.kerala.gov.in",
+    "online_form_submission": "All forms (except Form-M and Form-12C) can be submitted online via voters.eci.gov.in or nvsp.in",
+    "acknowledgement_note": "All submitted forms generate an Acknowledgement Number. Use it to track application status on voters.eci.gov.in."
+  }
+}

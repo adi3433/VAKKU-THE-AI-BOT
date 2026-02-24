@@ -9,9 +9,11 @@ import {
   PaperAirplaneIcon,
   MicrophoneIcon,
   StopIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/solid';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useLocale } from '@/hooks/useLocale';
+import { useVaakkuStore } from '@/lib/store';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -30,6 +32,23 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
     stopListening,
     resetTranscript,
   } = useSpeechRecognition(locale);
+
+  const { locationShared, setUserLocation } = useVaakkuStore();
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  const handleShareLocation = () => {
+    if (locationShared || locationLoading) return;
+    if (!navigator.geolocation) return;
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation(pos.coords.latitude, pos.coords.longitude);
+        setLocationLoading(false);
+      },
+      () => setLocationLoading(false),
+      { enableHighAccuracy: true, timeout: 10_000 }
+    );
+  };
 
   useEffect(() => {
     if (transcript) setText(transcript);
@@ -133,6 +152,29 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
           `}
           aria-label="Chat message input"
         />
+
+        {/* Location share button */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={handleShareLocation}
+          disabled={disabled || locationShared || locationLoading}
+          aria-label={locationShared ? 'Location shared' : 'Share location'}
+          title={locationShared
+            ? (locale === 'ml' ? 'ലൊക്കേഷൻ ഷെയർ ചെയ്തു ✓' : 'Location shared ✓')
+            : (locale === 'ml' ? 'ലൊക്കേഷൻ ഷെയർ ചെയ്യുക' : 'Share location')}
+          className={`
+            flex h-9 w-9 shrink-0 items-center justify-center rounded-xl
+            transition-colors duration-200
+            ${locationShared
+              ? 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400'
+              : locationLoading
+                ? 'animate-pulse bg-blue-100 text-blue-500 dark:bg-blue-500/20 dark:text-blue-400'
+                : 'text-[var(--text-tertiary)] hover:bg-[var(--surface-tertiary)] hover:text-[var(--text-secondary)]'
+            }
+          `}
+        >
+          <MapPinIcon className="h-4 w-4" />
+        </motion.button>
 
         {/* Send button */}
         <motion.button

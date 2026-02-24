@@ -94,7 +94,7 @@ export default function FAQPage() {
                   className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     filter === cat
                       ? 'bg-[var(--color-primary-500)] text-white'
-                      : 'bg-white border border-[var(--color-neutral-200)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)]'
+                      : 'bg-[var(--surface-primary)] border border-[var(--color-neutral-200)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)]'
                   }`}
                 >
                   {cat}
@@ -110,7 +110,7 @@ export default function FAQPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border border-[var(--color-neutral-100)] bg-white overflow-hidden"
+                  className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] overflow-hidden"
                 >
                   <button
                     onClick={() => setOpenIndex(openIndex === i ? null : i)}

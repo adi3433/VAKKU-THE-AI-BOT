@@ -18,6 +18,72 @@ interface GenerationResult {
 }
 
 /**
+ * Robust untagged chain-of-thought stripping.
+ * Qwen3-thinking may leak reasoning even with /no_think directive.
+ * This function detects reasoning paragraphs and strips them, keeping only
+ * the actual user-facing answer.
+ */
+const REASONING_INDICATOR = /\b(?:let me|I need to|I should|I'll|I can see|I must|I have to|I want to|I can't|the user(?:'s| is| has| asked| didn't| previously| tried| might| may| wants)|from the (?:context|source|provided|conversation|data)|check (?:if|the|for|whether|any)|looking at|wait,|hmm,?|first,?\s*I|also,?\s*(?:the|I)|but (?:the instructions?|wait|since|I|to be)|however,?\s*(?:the|I)|now (?:that|I|let)|so (?:the (?:response|answer)|I (?:should|need|can|must)|maybe|it)|this (?:means|suggests|is (?:a |the ))|before I|maybe I|alternatively|considering|my (?:approach|plan|reasoning)|the (?:instructions?|format|rules?) (?:says?|is|are|requires?)|to be safe|the (?:response|answer|output) (?:should|must|needs?)|I (?:don't|do not) (?:need|want|have)|since (?:the|they|we)|the (?:relevant|key|important) (?:details?|info|source)|no code-switching|the confidence)\b/i;
+
+function stripUntaggedReasoning(text: string): string {
+  const trimmed = text.trim();
+
+  // Early exit: if text starts with formatted answer content, it's clean
+  if (/^(?:\*\*|[-•●]\s|📍|📞|✅|❌|➡️|#{1,3}\s|\d+\.\s\*\*)/.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Split into paragraphs
+  const paragraphs = trimmed.split(/\n\n+/);
+  if (paragraphs.length <= 1) {
+    // Single paragraph: check if it's reasoning
+    if (REASONING_INDICATOR.test(trimmed) && trimmed.length > 200) {
+      return ''; // All reasoning, no answer — will trigger fallback
+    }
+    return trimmed;
+  }
+
+  // Score each paragraph: reasoning vs answer content
+  let answerStartIdx = -1;
+  for (let i = 0; i < paragraphs.length; i++) {
+    const para = paragraphs[i].trim();
+    if (!para) continue;
+
+    const isReasoning = REASONING_INDICATOR.test(para);
+    const isFormatted = /^(?:\*\*|[-•●]\s|📍|📞|✅|❌|➡️|✓|#{1,3}\s|\d+\.\s\*\*)/.test(para);
+
+    // Found a non-reasoning paragraph that looks like actual answer content
+    if (!isReasoning && isFormatted) {
+      answerStartIdx = i;
+      break;
+    }
+    // Non-reasoning, non-formatted but substantial text (not meta-commentary)
+    if (!isReasoning && para.length > 30) {
+      answerStartIdx = i;
+      break;
+    }
+  }
+
+  if (answerStartIdx > 0) {
+    const answer = paragraphs.slice(answerStartIdx).join('\n\n').trim();
+    // Sanity check: if what remains is still substantially reasoning, return empty
+    if (answer.length < 20) return '';
+    return answer;
+  }
+
+  // If ALL paragraphs are reasoning and there are many, the model failed
+  // to produce a clean answer — return empty to trigger fallback
+  if (answerStartIdx === -1 && paragraphs.length >= 3) {
+    const allReasoning = paragraphs.every(
+      (p) => !p.trim() || REASONING_INDICATOR.test(p.trim())
+    );
+    if (allReasoning) return '';
+  }
+
+  return trimmed;
+}
+
+/**
  * Generate an answer using qwen3-vl-30b-a3b-thinking (text-only mode)
  */
 export async function generateAnswer(
@@ -62,27 +128,9 @@ export async function generateAnswer(
     // 3. Strip orphan <think> tag without closing
     responseText = responseText.replace(/<think>[\s\S]*/g, '').trim();
 
-    // 4. Strip untagged chain-of-thought: if the response contains
-    //    reasoning preamble before the actual answer, remove it.
-    //    Detects patterns like "Okay, let me tackle...", "First, I'll check...",
-    //    "Wait, the instructions say...", "So, I'll list..." etc.
-    const cotPatterns = [
-      /^(?:Okay|Ok|Alright|Let me|First|Now|Hmm|Wait|So,|Looking|I need to|I should|I'll|The user|Alternatively)[,\s][\s\S]*?\n\n/i,
-    ];
-    // If the response looks like it starts with reasoning text followed by
-    // the actual formatted answer, find where the real answer begins.
-    // Real answers typically start with bullet points, bold text, or a direct statement.
-    const answerStartMatch = responseText.match(
-      /\n\n((?:[-•]\s|\*\*|📍|Polling Station|പോളിംഗ്|Here are|The polling|Your polling|Booth|In (?:Kottayam|Sankranthy|Mudiyoorkkara))[\s\S]*)/i
-    );
-    if (answerStartMatch && answerStartMatch.index !== undefined) {
-      // Check if there's substantial reasoning text before the answer
-      const preamble = responseText.substring(0, answerStartMatch.index);
-      const reasoningIndicators = (preamble.match(/\b(but|however|wait|let me|I('ll| need| should| have)|check|maybe|alternatively|looking|considering)\b/gi) || []).length;
-      if (reasoningIndicators >= 3) {
-        responseText = answerStartMatch[1].trim();
-      }
-    }
+    // 4. Robust untagged chain-of-thought stripping
+    //    Qwen3-thinking may leak reasoning outside <think> tags even with /no_think.
+    responseText = stripUntaggedReasoning(responseText);
 
     // Confidence heuristic: based on response length and finish reason
     let confidence = 0.85;

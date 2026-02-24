@@ -58,6 +58,13 @@ interface VaakkuState {
   isUploading: boolean;
   setIsUploading: (v: boolean) => void;
 
+  // ── GPS Location ──
+  userLatitude: number | null;
+  userLongitude: number | null;
+  locationShared: boolean;
+  setUserLocation: (lat: number, lng: number) => void;
+  clearUserLocation: () => void;
+
   // ── UI ──
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
@@ -191,6 +198,13 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
   setPendingUpload: (pendingUpload) => set({ pendingUpload }),
   isUploading: false,
   setIsUploading: (isUploading) => set({ isUploading }),
+
+  // GPS Location
+  userLatitude: null,
+  userLongitude: null,
+  locationShared: false,
+  setUserLocation: (lat, lng) => set({ userLatitude: lat, userLongitude: lng, locationShared: true }),
+  clearUserLocation: () => set({ userLatitude: null, userLongitude: null, locationShared: false }),
 
   // UI
   sidebarOpen: typeof window !== 'undefined' ? getPersistedSidebar() : true,

@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
       sessionId,
       conversationHistory,
       userId,
+      latitude,
+      longitude,
     } = body as ChatRequest & { userId?: string };
 
     if (!message?.trim()) {
@@ -74,6 +76,8 @@ export async function POST(request: NextRequest) {
       sessionId,
       conversationHistory: conversationHistory ?? [],
       userId,
+      latitude: typeof latitude === 'number' ? latitude : undefined,
+      longitude: typeof longitude === 'number' ? longitude : undefined,
     });
 
     // Get RAG result from router (most text queries go through RAG)
@@ -83,6 +87,44 @@ export async function POST(request: NextRequest) {
     let responseText = '';
     let confidence = 0;
     let retrievalTrace: RetrievalTraceEntry[] = [];
+
+    // ── V5: Engine direct answer (deterministic, no LLM) ──────
+    if (routerResult.type === 'engine_direct' && routerResult.engineResult) {
+      const engine = routerResult.engineResult;
+      responseText = engine.formattedResponse;
+      confidence = engine.confidence;
+
+      // Build a synthetic RAGOutput for consistent response shape
+      ragResult = {
+        text: responseText,
+        confidence,
+        sources: [{
+          title: `ECI — ${engine.engineName} engine`,
+          url: 'https://eci.gov.in/',
+          lastUpdated: new Date().toISOString().split('T')[0],
+          excerpt: `Data-grounded response from ${engine.engineName} engine (category: ${engine.classification.category}, sub-intent: ${engine.classification.subIntent ?? 'auto'})`,
+        }],
+        actionable: [],
+        retrievalScore: 1.0,
+        rerankerScores: [1.0],
+        retrievalTrace: [],
+        generatorModel: `v5-engine-${engine.engineName}`,
+        promptVersionHash: 'engine-direct-v5',
+        trace: {
+          retrievalLatencyMs: 0,
+          rerankLatencyMs: 0,
+          generationLatencyMs: 0,
+          totalLatencyMs: Date.now() - startTime,
+          retrievedCount: 0,
+          rerankedCount: 0,
+          contextTokens: 0,
+          promptTokens: 0,
+          completionTokens: 0,
+          promptVersion: 'engine-direct-v5',
+        },
+        escalate: false,
+      };
+    }
 
     // ── Direct booth answer from local data ───────────────────
     const boothResults = routerResult.lookupResult?.boothResults;

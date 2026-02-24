@@ -167,16 +167,16 @@ function OverviewTab() {
   ];
 
   const modalityStats = [
-    { label: 'Text', value: STATS.textQueries, color: 'bg-blue-100 text-blue-600' },
-    { label: 'Audio', value: STATS.audioQueries, color: 'bg-purple-100 text-purple-600' },
-    { label: 'Image', value: STATS.imageQueries, color: 'bg-amber-100 text-amber-600' },
+    { label: 'Text', value: STATS.textQueries, color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
+    { label: 'Audio', value: STATS.audioQueries, color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
+    { label: 'Image', value: STATS.imageQueries, color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
   ];
 
   const colorClasses: Record<string, string> = {
     primary: 'bg-[var(--color-primary-50)] text-[var(--color-primary-600)]',
-    success: 'bg-emerald-50 text-emerald-600',
-    accent: 'bg-amber-50 text-amber-600',
-    warning: 'bg-red-50 text-red-600',
+    success: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+    accent: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+    warning: 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400',
   };
 
   return (
@@ -191,7 +191,7 @@ function OverviewTab() {
           return (
             <div
               key={stat.label}
-              className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5"
+              className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5"
             >
               <div className={`inline-flex rounded-lg p-2 ${colorClasses[stat.color]}`}>
                 <Icon className="h-5 w-5" />
@@ -206,7 +206,7 @@ function OverviewTab() {
       </motion.div>
 
       {/* Modality breakdown */}
-      <div className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5">
+      <div className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5">
         <h3 className="text-sm font-semibold text-[var(--color-neutral-700)]">Queries by Modality</h3>
         <div className="mt-3 flex gap-4">
           {modalityStats.map((m) => (
@@ -236,7 +236,7 @@ function OverviewTab() {
       </div>
 
       {/* Prompt versions */}
-      <div className="rounded-xl border border-[var(--color-neutral-100)] bg-white p-5">
+      <div className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-5">
         <h3 className="text-sm font-semibold text-[var(--color-neutral-700)]">Active Prompt Versions</h3>
         <div className="mt-2 flex items-center gap-2">
           <ShieldCheckIcon className="h-4 w-4 text-emerald-500" />
@@ -272,11 +272,11 @@ function QueriesTab({
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
           placeholder="Filter queries by text, locale, or modality..."
-          className="w-full rounded-lg border border-[var(--color-neutral-200)] bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-[var(--color-primary-300)]"
+          className="w-full rounded-lg border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] py-2 pl-9 pr-4 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--color-primary-300)]"
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[var(--color-neutral-100)] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)]">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--color-neutral-100)] bg-[var(--color-neutral-50)]">
@@ -305,9 +305,9 @@ function QueriesTab({
                 </td>
                 <td className="px-4 py-3">
                   <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${
-                    log.modality === 'audio' ? 'bg-purple-50 text-purple-600' :
-                    log.modality === 'image' ? 'bg-amber-50 text-amber-600' :
-                    'bg-blue-50 text-blue-600'
+                    log.modality === 'audio' ? 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
+                    log.modality === 'image' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
+                    'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                   }`}>
                     {log.modality}
                   </span>
@@ -335,11 +335,11 @@ function QueriesTab({
                 </td>
                 <td className="px-4 py-3">
                   {log.escalated ? (
-                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
+                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
                       Escalated
                     </span>
                   ) : (
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                       OK
                     </span>
                   )}
@@ -366,7 +366,7 @@ function TracesTab() {
       {SAMPLE_TRACES.map((trace) => (
         <div
           key={trace.queryId}
-          className="rounded-xl border border-[var(--color-neutral-100)] bg-white overflow-hidden"
+          className="rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] overflow-hidden"
         >
           <button
             onClick={() => setExpandedTrace(expandedTrace === trace.queryId ? null : trace.queryId)}
@@ -462,7 +462,7 @@ function EscalationsTab() {
       {SAMPLE_ESCALATIONS.map((esc) => (
         <div
           key={esc.id}
-          className={`rounded-xl border bg-white p-5 ${
+          className={`rounded-xl border bg-[var(--surface-primary)] p-5 ${
             esc.status === 'pending'
               ? 'border-red-200'
               : 'border-[var(--color-neutral-100)]'
@@ -485,16 +485,16 @@ function EscalationsTab() {
             <div className="flex items-center gap-2">
               {esc.status === 'pending' ? (
                 <>
-                  <button className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 transition-colors">
+                  <button className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-100 transition-colors dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50">
                     <CheckCircleIcon className="mr-1 inline h-3.5 w-3.5" />
                     Verify
                   </button>
-                  <button className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors">
+                  <button className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 transition-colors dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
                     Flag
                   </button>
                 </>
               ) : (
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                   Reviewed
                 </span>
               )}
@@ -521,7 +521,7 @@ function SyncTab() {
       {sources.map((source) => (
         <div
           key={source.type}
-          className="flex items-center justify-between rounded-xl border border-[var(--color-neutral-100)] bg-white p-4"
+          className="flex items-center justify-between rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-4"
         >
           <div>
             <p className="font-medium text-[var(--color-neutral-800)]">{source.label}</p>
@@ -557,7 +557,7 @@ function AuditTab() {
       {auditEntries.map((entry, i) => (
         <div
           key={i}
-          className="flex items-start gap-3 rounded-xl border border-[var(--color-neutral-100)] bg-white p-4"
+          className="flex items-start gap-3 rounded-xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-4"
         >
           <div className="mt-0.5 rounded-lg bg-[var(--color-neutral-100)] p-1.5">
             <ClockIcon className="h-4 w-4 text-[var(--color-neutral-500)]" />
@@ -565,8 +565,8 @@ function AuditTab() {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${
-                entry.action === 'escalation' ? 'bg-red-50 text-red-600' :
-                entry.action === 'data_deletion' ? 'bg-amber-50 text-amber-600' :
+                entry.action === 'escalation' ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
+                entry.action === 'data_deletion' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
                 'bg-[var(--color-neutral-100)] text-[var(--color-neutral-600)]'
               }`}>
                 {entry.action}

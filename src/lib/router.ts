@@ -1,20 +1,30 @@
 /**
- * Intelligent Model Router — Multimodal Input Classification
- * ────────────────────────────────────────────────────────────
+ * Intelligent Model Router — V5 Multimodal Input Classification
+ * ──────────────────────────────────────────────────────────────
  * Routes user input to the appropriate pipeline based on content type:
  *   - Audio  → Voice pipeline (Whisper V3) → then text RAG
  *   - Image  → Vision pipeline (qwen3-vl multimodal)
+ *   - Text with V5 engine match → Deterministic engine response (no LLM)
  *   - Text with structured lookup keywords → Internal API (booth, registration, etc.)
  *   - Text FAQ/general → RAG pipeline (text-only)
  *   - Mixed (image + text) → Multimodal reasoning
  *
+ * V5: Query classification runs BEFORE structured lookup for deterministic routing.
  * CRITICAL: Never invoke VL model unless image data is present.
  */
 
 import { processVoiceInput, type VoiceResult } from '@/lib/voice';
 import { extractDocumentFields, type VisionExtractionResult } from '@/lib/vision';
 import { ragOrchestrate, type RAGInput, type RAGOutput } from '@/lib/rag/orchestrator';
-import { searchBooths, formatBoothResult, type BoothRecord } from '@/lib/booth-data';
+import { searchBooths, searchNearestBooths, formatBoothResult, formatNearestBoothResult, type BoothRecord } from '@/lib/booth-data';
+import {
+  classifyQuery,
+  getFormGuidance,
+  getVotingRulesResponse,
+  getComplaintResponse,
+  getTimelineResponse,
+  type ClassificationResult,
+} from '@/lib/engines';
 import type { Locale, ChatMessage } from '@/types';
 
 // ── Input types ──────────────────────────────────────────────────
@@ -40,9 +50,13 @@ export interface RouterInput {
   conversationHistory?: ChatMessage[];
   /** User ID for memory context injection (opt-in) */
   userId?: string;
+  /** User's GPS latitude (for nearest booth search) */
+  latitude?: number;
+  /** User's GPS longitude (for nearest booth search) */
+  longitude?: number;
 }
 
-export type RouterResultType = 'rag' | 'voice_then_rag' | 'vision' | 'structured_lookup' | 'multimodal';
+export type RouterResultType = 'rag' | 'voice_then_rag' | 'vision' | 'structured_lookup' | 'multimodal' | 'engine_direct';
 
 export interface RouterResult {
   /** Which pipeline was used */
@@ -61,8 +75,18 @@ export interface RouterResult {
   visionResult?: VisionExtractionResult;
   /** Structured lookup result (if internal API was called) */
   lookupResult?: StructuredLookupResult;
+  /** V5 engine direct result (deterministic, no LLM needed) */
+  engineResult?: EngineDirectResult;
   /** Total routing + processing latency */
   totalLatencyMs: number;
+}
+
+/** V5: Deterministic engine response — bypasses LLM */
+export interface EngineDirectResult {
+  engineName: string;
+  classification: ClassificationResult;
+  formattedResponse: string;
+  confidence: number;
 }
 
 export interface StructuredLookupResult {
@@ -86,6 +110,7 @@ const STRUCTURED_PATTERNS: Array<{
       /\b(booth|polling\s*station|ബൂത്ത്|പോളിങ്\s*സ്റ്റേഷൻ)\b/i,
       /\b(where\s+(do\s+)?i\s+vote|എവിടെ\s*വോട്ട്)\b/i,
       /\b(find\s+my\s+booth|my\s+booth|എന്റെ\s*ബൂത്ത്)\b/i,
+      /^\s*\d{1,3}\s*$/, // bare booth number
     ],
     type: 'booth_search',
     endpoint: '/api/booth',
@@ -112,7 +137,11 @@ const STRUCTURED_PATTERNS: Array<{
 /**
  * Detect if the query maps to a structured internal API
  */
-function detectStructuredLookup(query: string): StructuredLookupResult | null {
+function detectStructuredLookup(
+  query: string,
+  latitude?: number,
+  longitude?: number
+): StructuredLookupResult | null {
   const lowerQuery = query.toLowerCase();
 
   for (const { patterns, type, endpoint } of STRUCTURED_PATTERNS) {
@@ -129,10 +158,14 @@ function detectStructuredLookup(query: string): StructuredLookupResult | null {
         const pincodeMatch = query.match(/\b(\d{6})\b/);
         if (pincodeMatch) extractedParams.pincode = pincodeMatch[1];
 
-        // For booth queries, do a direct local search right away
+        // For booth queries: prefer GPS-based nearest search, fallback to text search
         let boothResults: BoothRecord[] | undefined;
         if (type === 'booth_search') {
-          boothResults = searchBooths(query, 5);
+          if (latitude && longitude) {
+            boothResults = searchNearestBooths(latitude, longitude, 5, 10);
+          } else {
+            boothResults = searchBooths(query, 5);
+          }
         }
 
         return {
@@ -162,6 +195,163 @@ function detectModality(input: RouterInput): InputModality {
   return 'text';
 }
 
+// ── V5 Engine Routing ────────────────────────────────────────────
+
+/**
+ * Attempt to resolve query through a V5 deterministic engine.
+ * Returns EngineDirectResult if a high-confidence match is found,
+ * or null to fall through to RAG.
+ */
+function tryEngineRoute(
+  query: string,
+  locale: string,
+  latitude?: number,
+  longitude?: number
+): EngineDirectResult | null {
+  const classification = classifyQuery(query);
+
+  // Only route to engine if classification confidence is decent
+  if (classification.confidence < 0.4) return null;
+
+  switch (classification.category) {
+    case 'voting_rules': {
+      const result = getVotingRulesResponse(classification.subIntent, query, locale);
+      return {
+        engineName: 'voting-rules',
+        classification,
+        formattedResponse: result.formattedResponse,
+        confidence: result.confidence,
+      };
+    }
+
+    case 'form_guidance': {
+      const result = getFormGuidance(classification.subIntent, query, locale);
+      if (!result) return null; // Fall through to RAG if no form matched
+      return {
+        engineName: 'civic-process',
+        classification,
+        formattedResponse: result.formattedResponse,
+        confidence: result.confidence,
+      };
+    }
+
+    case 'complaint': {
+      const result = getComplaintResponse(classification.subIntent, query, locale);
+      return {
+        engineName: 'complaint',
+        classification,
+        formattedResponse: result.formattedResponse,
+        confidence: result.confidence,
+      };
+    }
+
+    case 'timeline': {
+      const result = getTimelineResponse(classification.subIntent, query, locale);
+      return {
+        engineName: 'timeline',
+        classification,
+        formattedResponse: result.formattedResponse,
+        confidence: result.confidence,
+      };
+    }
+
+    case 'out_of_scope': {
+      const isMl = locale === 'ml';
+      return {
+        engineName: 'civic-boundary',
+        classification,
+        formattedResponse: isMl
+          ? 'ഞാൻ ഒരു നിഷ്പക്ഷ വോട്ടർ വിവര സഹായിയാണ്. രാഷ്ട്രീയ അഭിപ്രായങ്ങൾ, പാർട്ടി ശുപാർശകൾ, അല്ലെങ്കിൽ തിരഞ്ഞെടുപ്പ് പ്രവചനങ്ങൾ നൽകാൻ എനിക്ക് കഴിയില്ല. വോട്ടർ രജിസ്ട്രേഷൻ, ബൂത്ത് വിവരങ്ങൾ, വോട്ടിങ് പ്രക്രിയ, പരാതി നൽകൽ എന്നിവയെക്കുറിച്ച് ചോദിക്കാം. 📞 ഹെൽപ്‌ലൈൻ: 1950'
+          : 'I am an impartial voter information assistant. I cannot provide political opinions, party recommendations, or election predictions. I can help with voter registration, booth information, voting process, complaint filing, and election schedules. 📞 Helpline: 1950',
+        confidence: 0.99,
+      };
+    }
+
+    case 'booth_query': {
+      const isMl = locale === 'ml';
+
+      // Check if query contains / is a booth number → direct lookup
+      const numberMatch = query.trim().match(/^(\d{1,3})$/)
+        || query.match(/(?:booth|station|polling\s*station)\s*(?:number\s*(?:is\s*)?)?(\d+)/i)
+        || query.match(/(?:number|no\.?|#)\s*(?:is\s*)?(\d+)/i);
+      if (numberMatch) {
+        const boothResults = searchBooths(query.trim(), 3);
+        if (boothResults.length > 0) {
+          const formatted = boothResults
+            .map((b) => formatBoothResult(b, isMl ? 'ml' : 'en'))
+            .join('\n\n---\n\n');
+          const header = boothResults.length === 1
+            ? (isMl
+                ? `📍 **പോളിങ് സ്റ്റേഷൻ ${boothResults[0].stationNumber} വിവരങ്ങൾ:**\n\n`
+                : `📍 **Polling Station ${boothResults[0].stationNumber} Details:**\n\n`)
+            : (isMl
+                ? `📍 **${boothResults.length} പോളിങ് സ്റ്റേഷനുകൾ കണ്ടെത്തി:**\n\n`
+                : `📍 **${boothResults.length} matching polling stations found:**\n\n`);
+          const footer = isMl
+            ? '\n\nLAC 97-Kottayam, District 10-Kottayam. സ്ഥിരീകരണത്തിന് [electoralsearch.eci.gov.in](https://electoralsearch.eci.gov.in/) സന്ദർശിക്കുക.'
+            : '\n\nLAC 97-Kottayam, District 10-Kottayam. For verification, visit [electoralsearch.eci.gov.in](https://electoralsearch.eci.gov.in/).';
+          return {
+            engineName: 'booth-locator',
+            classification,
+            formattedResponse: header + formatted + footer,
+            confidence: 0.97,
+          };
+        }
+        // Number not found in our data
+        return {
+          engineName: 'booth-locator',
+          classification,
+          formattedResponse: isMl
+            ? `😔 ബൂത്ത് നമ്പർ ${numberMatch[1]} ഞങ്ങളുടെ LAC 97-Kottayam ഡാറ്റയിൽ കണ്ടെത്താനായില്ല. ബൂത്ത് നമ്പറുകൾ 1–171 ശ്രേണിയിലാണ്. ദയവായി പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക. 📞 ഹെൽപ്‌ലൈൻ: 1950`
+            : `😔 Booth number ${numberMatch[1]} was not found in our LAC 97-Kottayam data. Booth numbers range from 1–171. Please verify and try again. 📞 Helpline: 1950`,
+          confidence: 0.9,
+        };
+      }
+
+      // If GPS coordinates are available, return nearest booths directly
+      if (latitude && longitude) {
+        const nearestBooths = searchNearestBooths(latitude, longitude, 5, 10);
+        if (nearestBooths.length === 0) {
+          return {
+            engineName: 'booth-locator',
+            classification,
+            formattedResponse: isMl
+              ? '😔 നിങ്ങളുടെ സ്ഥാനത്തിന് 10 കിലോമീറ്റർ ചുറ്റളവിൽ പോളിങ് ബൂത്തുകൾ കണ്ടെത്താനായില്ല. ദയവായി നിങ്ങളുടെ ബൂത്ത് നമ്പർ അല്ലെങ്കിൽ സ്ഥലപ്പേര് നൽകുക. 📞 ഹെൽപ്‌ലൈൻ: 1950'
+              : '😔 No polling booths found within 10 km of your location. Please try providing your booth number or area name for a more specific search. 📞 Helpline: 1950',
+            confidence: 0.9,
+          };
+        }
+        const header = isMl
+          ? `📍 **നിങ്ങളുടെ സമീപത്തുള്ള ${nearestBooths.length} പോളിങ് ബൂത്തുകൾ:**\n\n`
+          : `📍 **${nearestBooths.length} nearest polling booths to your location:**\n\n`;
+        const boothCards = nearestBooths
+          .map((b) => formatNearestBoothResult(b, isMl ? 'ml' : 'en'))
+          .join('\n\n---\n\n');
+        return {
+          engineName: 'booth-locator',
+          classification,
+          formattedResponse: header + boothCards,
+          confidence: 0.95,
+        };
+      }
+      // No GPS: ask user to share location or provide specific details
+      return {
+        engineName: 'booth-locator',
+        classification,
+        formattedResponse: isMl
+          ? '📍 നിങ്ങളുടെ അടുത്തുള്ള പോളിങ് ബൂത്ത് കണ്ടെത്താൻ, ദയവായി **ലൊക്കേഷൻ ഷെയർ ചെയ്യുക** (📍 ബട്ടൺ അമർത്തുക) അല്ലെങ്കിൽ നിങ്ങളുടെ ബൂത്ത് നമ്പർ / സ്ഥലപ്പേര് ടൈപ്പ് ചെയ്യുക.'
+          : '📍 To find your nearest polling booth, please **share your location** (tap the 📍 button) or type your booth number / area name.',
+        confidence: 0.9,
+      };
+    }
+
+    // roll_lookup → fall through to existing structured lookup
+    // general_faq → fall through to RAG
+    default:
+      return null;
+  }
+}
+
 // ── Main router ──────────────────────────────────────────────────
 
 /**
@@ -178,11 +368,16 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
   const modality = detectModality(input);
 
   let resolvedQuery = input.text?.trim() || '';
+  // V5: Auto-detect Malayalam from Unicode script in query text
   let resolvedLocale = input.locale;
+  if (resolvedQuery && /[\u0D00-\u0D7F]/.test(resolvedQuery)) {
+    resolvedLocale = 'ml' as Locale;
+  }
   let voiceResult: VoiceResult | undefined;
   let visionResult: VisionExtractionResult | undefined;
   let ragResult: RAGOutput | undefined;
   let lookupResult: StructuredLookupResult | null = null;
+  let engineResult: EngineDirectResult | null = null;
   let resultType: RouterResultType;
 
   switch (modality) {
@@ -196,18 +391,24 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
       resolvedLocale = voiceResult.locale;
 
       // Now route the transcribed text
-      lookupResult = detectStructuredLookup(resolvedQuery);
-      if (lookupResult) {
-        resultType = 'structured_lookup';
+      // V5: Try engine routing first
+      engineResult = tryEngineRoute(resolvedQuery, resolvedLocale, input.latitude, input.longitude);
+      if (engineResult) {
+        resultType = 'engine_direct';
       } else {
-        // Run RAG on transcribed text
-        ragResult = await ragOrchestrate({
-          query: resolvedQuery,
-          locale: resolvedLocale,
-          conversationHistory: input.conversationHistory || [],
-          userId: input.userId,
-        });
-        resultType = 'voice_then_rag';
+        lookupResult = detectStructuredLookup(resolvedQuery, input.latitude, input.longitude);
+        if (lookupResult) {
+          resultType = 'structured_lookup';
+        } else {
+          // Run RAG on transcribed text
+          ragResult = await ragOrchestrate({
+            query: resolvedQuery,
+            locale: resolvedLocale,
+            conversationHistory: input.conversationHistory || [],
+            userId: input.userId,
+          });
+          resultType = 'voice_then_rag';
+        }
       }
       break;
     }
@@ -245,7 +446,7 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
       break;
     }
 
-    // ── Text only: Structured lookup or RAG ─────────────────
+    // ── Text only: V5 Engine → Structured lookup → RAG ────────
     case 'text':
     default: {
       if (!resolvedQuery) {
@@ -254,17 +455,23 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
           : 'How can I help you?';
       }
 
-      lookupResult = detectStructuredLookup(resolvedQuery);
-      if (lookupResult) {
-        resultType = 'structured_lookup';
+      // V5: Try deterministic engine routing first
+      engineResult = tryEngineRoute(resolvedQuery, resolvedLocale, input.latitude, input.longitude);
+      if (engineResult) {
+        resultType = 'engine_direct';
       } else {
-        ragResult = await ragOrchestrate({
-          query: resolvedQuery,
-          locale: resolvedLocale,
-          conversationHistory: input.conversationHistory || [],
-          userId: input.userId,
-        });
-        resultType = 'rag';
+        lookupResult = detectStructuredLookup(resolvedQuery, input.latitude, input.longitude);
+        if (lookupResult) {
+          resultType = 'structured_lookup';
+        } else {
+          ragResult = await ragOrchestrate({
+            query: resolvedQuery,
+            locale: resolvedLocale,
+            conversationHistory: input.conversationHistory || [],
+            userId: input.userId,
+          });
+          resultType = 'rag';
+        }
       }
       break;
     }
@@ -284,6 +491,9 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
       hasVision: !!visionResult,
       hasRag: !!ragResult,
       hasLookup: !!lookupResult,
+      hasEngine: !!engineResult,
+      engineName: engineResult?.engineName ?? null,
+      classifiedCategory: engineResult?.classification.category ?? null,
       totalLatencyMs,
       timestamp: new Date().toISOString(),
     })
@@ -298,6 +508,7 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
     voiceResult,
     visionResult,
     lookupResult: lookupResult ?? undefined,
+    engineResult: engineResult ?? undefined,
     totalLatencyMs,
   };
 }

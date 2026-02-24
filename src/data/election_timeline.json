@@ -1,0 +1,146 @@
+{
+  "metadata": {
+    "dataset_name": "election_timeline",
+    "version": "1.0",
+    "election": "Kerala Legislative Assembly Election 2026",
+    "district": "Kottayam",
+    "state": "Kerala",
+    "system": "Vaakku V5",
+    "description": "Official election timeline for the 2026 Kerala Assembly Elections. Dates are pending official announcement by the Election Commission of India.",
+    "status": "PENDING_OFFICIAL_ANNOUNCEMENT",
+    "announcement_source": "https://www.eci.gov.in",
+    "reference_source": "https://kottayam.nic.in",
+    "ceo_kerala": "https://www.ceo.kerala.gov.in",
+    "last_updated": "2026-02-23",
+    "update_instructions": "Replace all 'TBA' values with official dates once ECI announces the schedule. Update 'status' field to 'ANNOUNCED' and set 'announcement_date'."
+  },
+
+  "announcement": {
+    "status": "PENDING_OFFICIAL_ANNOUNCEMENT",
+    "announcement_date": "TBA",
+    "expected_window": "Late February – Early March 2026",
+    "announced_by": "Election Commission of India",
+    "official_press_release_url": "https://www.eci.gov.in",
+    "notification_note": "The ECI will formally announce the full election schedule including all below dates via a press conference and official Gazette notification."
+  },
+
+  "model_code_of_conduct": {
+    "comes_into_effect": "TBA — same date as election announcement",
+    "lifted_on": "TBA — after counting and result declaration",
+    "description": "The Model Code of Conduct (MCC) comes into effect immediately upon announcement of the election schedule and governs conduct of political parties, candidates, and the government until results are declared.",
+    "status": "NOT_IN_EFFECT"
+  },
+
+  "key_dates": {
+    "election_notification_date": {
+      "label": "Date of Notification",
+      "date": "TBA",
+      "description": "Official notification published in the Gazette. Nomination process begins from this date.",
+      "status": "TBA"
+    },
+    "last_date_of_nomination": {
+      "label": "Last Date of Filing Nominations",
+      "date": "TBA",
+      "description": "Candidates must file their nomination papers with the Returning Officer by this date.",
+      "status": "TBA"
+    },
+    "scrutiny_of_nominations": {
+      "label": "Scrutiny of Nominations",
+      "date": "TBA",
+      "description": "Returning Officer verifies and scrutinises all filed nominations for eligibility.",
+      "status": "TBA"
+    },
+    "last_date_of_withdrawal": {
+      "label": "Last Date of Withdrawal of Candidature",
+      "date": "TBA",
+      "description": "Candidates may withdraw their nomination on or before this date. Final candidate list is published after this.",
+      "status": "TBA"
+    },
+    "poll_date": {
+      "label": "Date of Poll",
+      "date": "TBA",
+      "description": "The actual voting day. Polling stations open 7:00 AM to 6:00 PM.",
+      "poll_time_start": "07:00",
+      "poll_time_end": "18:00",
+      "status": "TBA"
+    },
+    "counting_date": {
+      "label": "Date of Counting",
+      "date": "TBA",
+      "description": "Votes are counted and results declared on this date.",
+      "status": "TBA"
+    },
+    "completion_date": {
+      "label": "Election Process Completion Date",
+      "date": "TBA",
+      "description": "Date by which the entire election process must be completed as specified in the notification.",
+      "status": "TBA"
+    }
+  },
+
+  "voter_service_deadlines": {
+    "note": "Voter service deadlines (form submission cutoffs) are determined relative to the notification/poll dates. These will be populated once official dates are announced.",
+    "form_6_new_registration": {
+      "label": "Last date for new voter registration (Form 6)",
+      "deadline": "TBA",
+      "reference": "Typically several weeks before poll date — check CEO Kerala for exact cutoff."
+    },
+    "form_8_corrections": {
+      "label": "Last date for corrections / address change (Form 8)",
+      "deadline": "TBA",
+      "reference": "Typically several weeks before poll date."
+    },
+    "form_7_deletion_objection": {
+      "label": "Last date for objections / deletions (Form 7)",
+      "deadline": "TBA",
+      "reference": "Typically several weeks before poll date."
+    },
+    "postal_ballot_application": {
+      "label": "Last date for postal ballot application (85+ and PwD voters)",
+      "deadline": "TBA",
+      "reference": "Apply to ERO after notification date. Deadline announced after schedule is released."
+    }
+  },
+
+  "assembly_constituencies_kottayam": {
+    "description": "Assembly constituencies within Kottayam district that will go to polls.",
+    "note": "Constituency boundaries are as per 2008 delimitation. All below constituencies will vote on the same poll date.",
+    "constituencies": [
+      { "no": 99,  "name": "Pala" },
+      { "no": 100, "name": "Kaduthuruthy" },
+      { "no": 101, "name": "Vaikom" },
+      { "no": 102, "name": "Ettumanoor" },
+      { "no": 103, "name": "Kottayam" },
+      { "no": 104, "name": "Puthuppally" },
+      { "no": 105, "name": "Changanacherry" },
+      { "no": 106, "name": "Kanjirappally" },
+      { "no": 107, "name": "Poonjar" }
+    ],
+    "total_constituencies": 9
+  },
+
+  "reference_timeline_2021": {
+    "description": "2021 Kerala Assembly Election timeline (same structure, actual dates for reference only — do NOT use these as 2026 dates).",
+    "disclaimer": "These are historical reference dates for JSON structure validation only.",
+    "notification_date": "2021-03-12",
+    "last_date_of_nomination": "2021-03-19",
+    "scrutiny_of_nominations": "2021-03-20",
+    "last_date_of_withdrawal": "2021-03-22",
+    "poll_date": "2021-04-06",
+    "counting_date": "2021-05-02"
+  },
+
+  "vaakku_bot_behaviour": {
+    "when_dates_are_tba": "Clearly inform the user that official dates have not yet been announced by ECI. Direct them to https://www.eci.gov.in or https://www.ceo.kerala.gov.in for the latest updates.",
+    "when_dates_are_announced": "Read from key_dates fields and provide structured response with dates, countdown if applicable, and any deadlines that are approaching.",
+    "never_assume_dates": true,
+    "never_use_reference_2021_dates_as_2026": true
+  },
+
+  "resources": {
+    "eci_official": "https://www.eci.gov.in",
+    "ceo_kerala": "https://www.ceo.kerala.gov.in",
+    "kottayam_district": "https://kottayam.nic.in",
+    "voter_helpline": "1950"
+  }
+}

@@ -9,7 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import type { BoothSearchResponse, BoothInfo, ChatSource } from '@/types';
-import { searchBooths, getAllBooths, getGoogleMapsDirectionsUrl, type BoothRecord } from '@/lib/booth-data';
+import { searchBooths, searchNearestBooths, getAllBooths, getGoogleMapsDirectionsUrl, type BoothRecord } from '@/lib/booth-data';
 
 function boothRecordToBoothInfo(record: BoothRecord): BoothInfo {
   return {
@@ -40,11 +40,21 @@ export async function GET(request: NextRequest) {
   const stationNumber = searchParams.get('station_number');
   const voterId = searchParams.get('voter_id');
   const constituency = searchParams.get('constituency');
+  const lat = searchParams.get('lat');
+  const lng = searchParams.get('lng');
 
   let results: BoothRecord[] = [];
 
+  // Search by GPS coordinates (nearest booths)
+  if (lat && lng) {
+    const latNum = parseFloat(lat);
+    const lngNum = parseFloat(lng);
+    if (!isNaN(latNum) && !isNaN(lngNum)) {
+      results = searchNearestBooths(latNum, lngNum, 5, 10);
+    }
+  }
   // Search by station number
-  if (stationNumber) {
+  else if (stationNumber) {
     const num = parseInt(stationNumber, 10);
     results = getAllBooths().filter((b) => b.stationNumber === num);
   }
@@ -56,9 +66,9 @@ export async function GET(request: NextRequest) {
   else if (constituency) {
     results = searchBooths(constituency, 10);
   }
-  // No search params — return all
+  // No search params — return all booths (for map display)
   else {
-    results = getAllBooths().slice(0, 10); // first 10 for browsing
+    results = getAllBooths();
   }
 
   const boothInfos: BoothInfo[] = results.map(boothRecordToBoothInfo);

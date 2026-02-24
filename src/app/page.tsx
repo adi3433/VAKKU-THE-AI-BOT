@@ -98,8 +98,8 @@ const features = [
 const colorMap: Record<string, string> = {
   primary: 'bg-[var(--color-primary-50)] text-[var(--color-primary-600)] border-[var(--color-primary-100)]',
   accent: 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)] border-[var(--color-accent-100)]',
-  success: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-  warning: 'bg-amber-50 text-amber-600 border-amber-100',
+  success: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
+  warning: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800',
 };
 
 export default function Home() {
@@ -151,7 +151,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/booth"
-                className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-neutral-200)] bg-white px-6 py-3 text-sm font-semibold text-[var(--color-neutral-700)] shadow-sm transition-all hover:bg-[var(--color-neutral-50)] hover:shadow-md"
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-neutral-700)] shadow-sm transition-all hover:bg-[var(--color-neutral-50)] hover:shadow-md"
               >
                 <MapPinIcon className="h-5 w-5" />
                 {isMl ? 'ബൂത്ത് കണ്ടെത്തുക' : 'Find Booth'}
@@ -175,7 +175,7 @@ export default function Home() {
                 <motion.div key={feature.href} variants={fadeUp}>
                   <Link
                     href={feature.href}
-                    className="group block rounded-2xl border border-[var(--color-neutral-100)] bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-[var(--color-primary-200)]"
+                    className="group block rounded-2xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-6 shadow-sm transition-all hover:shadow-md hover:border-[var(--color-primary-200)]"
                   >
                     <div
                       className={`inline-flex rounded-xl border p-3 ${colorMap[feature.color]}`}
@@ -196,7 +196,7 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-[var(--color-neutral-100)] bg-white/60 backdrop-blur">
+        <footer className="border-t border-[var(--color-neutral-100)] bg-[var(--surface-primary)]/80 backdrop-blur">
           <div className="mx-auto max-w-5xl px-4 py-6 text-center text-xs text-[var(--color-neutral-400)]">
             <p>{t.poweredBy} &middot; {t.privacyNotice}</p>
           </div>

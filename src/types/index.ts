@@ -32,6 +32,10 @@ export interface ChatRequest {
   locale: Locale;
   sessionId: string;
   conversationHistory?: ChatMessage[];
+  /** User's GPS latitude (for nearest booth search) */
+  latitude?: number;
+  /** User's GPS longitude (for nearest booth search) */
+  longitude?: number;
 }
 
 export interface ChatMessage {

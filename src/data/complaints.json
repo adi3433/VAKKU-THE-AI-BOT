@@ -1,0 +1,196 @@
+{
+  "metadata": {
+    "dataset_name": "complaints",
+    "version": "1.0",
+    "district": "Kottayam",
+    "state": "Kerala",
+    "system": "Vaakku V5",
+    "description": "cVIGIL complaint guidance dataset — process steps, violation types, escalation paths, and helpline references.",
+    "source": "Election Commission of India — https://eci.gov.in/cvigil/",
+    "last_updated": "2026-02-23"
+  },
+
+  "cvigil_overview": {
+    "full_name": "Citizen Vigilance Against Model Code of Conduct Violations",
+    "launched_by": "Election Commission of India",
+    "purpose": "Enables citizens to report Model Code of Conduct (MCC) violations and electoral malpractice in real time using a mobile app.",
+    "active_period": "From date of election notification (Model Code of Conduct comes into force) until counting day.",
+    "app_name": "cVIGIL",
+    "app_platforms": {
+      "android": "https://play.google.com/store/apps/details?id=in.nic.eci.cvigil",
+      "ios": "Available on Apple App Store — search 'cVIGIL ECI'"
+    },
+    "portal": "https://cvigil.eci.gov.in",
+    "anonymous_complaint": {
+      "supported": true,
+      "limitations": "Anonymous complaints are accepted but follow-up or status tracking requires a registered account."
+    },
+    "unique_id_tracking": true,
+    "resolution_sla_minutes": 100
+  },
+
+  "complaint_process": {
+    "title": "How to File a cVIGIL Complaint — Step by Step",
+    "steps": [
+      {
+        "step": 1,
+        "actor": "Citizen",
+        "action": "Open cVIGIL app and tap 'Report'",
+        "details": "Location is auto-detected via GPS. Citizen captures photo or video evidence of the violation (max 2 minutes video)."
+      },
+      {
+        "step": 2,
+        "actor": "Citizen",
+        "action": "Select violation type and submit",
+        "details": "Select the type of MCC violation from the list, add a brief description if needed, and submit. A unique Complaint ID is generated immediately."
+      },
+      {
+        "step": 3,
+        "actor": "District Control Room (DCR)",
+        "action": "Receives and assigns complaint",
+        "details": "DCR receives the geotagged complaint in real time and assigns the nearest available Flying Squad or surveillance team."
+      },
+      {
+        "step": 4,
+        "actor": "Flying Squad / Field Team",
+        "action": "Reaches location and investigates",
+        "details": "Field team navigates to the GPS-tagged location. They must reach within the defined window and submit field report with action taken."
+      },
+      {
+        "step": 5,
+        "actor": "Returning Officer / Decider",
+        "action": "Reviews evidence and takes action",
+        "details": "Final decision is made by the Returning Officer or designated decider. Complaint is marked as resolved or escalated."
+      },
+      {
+        "step": 6,
+        "actor": "Citizen",
+        "action": "Receives status update",
+        "details": "Citizen can track the status of their complaint using the Complaint ID on the cVIGIL app or portal."
+      }
+    ],
+    "total_sla": "100 minutes from submission to resolution (target)",
+    "note": "The 100-minute SLA is a target — not a guarantee. Complex violations may take longer."
+  },
+
+  "violation_types": {
+    "description": "Types of MCC violations that can be reported via cVIGIL",
+    "categories": [
+      {
+        "id": "V01",
+        "name": "Illegal hoardings / banners / posters",
+        "description": "Unauthorized campaign materials, banners, or posters displayed in violation of MCC guidelines."
+      },
+      {
+        "id": "V02",
+        "name": "Cash distribution",
+        "description": "Distribution of cash, gifts, or valuables to induce voters."
+      },
+      {
+        "id": "V03",
+        "name": "Liquor distribution",
+        "description": "Illegal distribution of alcohol to voters before or during election period."
+      },
+      {
+        "id": "V04",
+        "name": "Paid news",
+        "description": "News or media content that is paid political advertisement presented as genuine news."
+      },
+      {
+        "id": "V05",
+        "name": "Use of government vehicles / resources",
+        "description": "Misuse of government vehicles, infrastructure, or staff for campaign activities."
+      },
+      {
+        "id": "V06",
+        "name": "Voter intimidation / booth intimidation",
+        "description": "Threatening, coercing, or intimidating voters at booths or in their homes."
+      },
+      {
+        "id": "V07",
+        "name": "Firearms / weapons display",
+        "description": "Unlawful display or use of firearms and weapons to influence voters."
+      },
+      {
+        "id": "V08",
+        "name": "Post-poll period campaigning",
+        "description": "Campaigning activities after the prescribed silence period begins (48 hours before polling)."
+      },
+      {
+        "id": "V09",
+        "name": "Defacement of public property",
+        "description": "Writing on walls, painting, or defacing public or private property for campaign purposes."
+      },
+      {
+        "id": "V10",
+        "name": "Carrying arms near polling area",
+        "description": "Carrying weapons in or near a polling station (prohibited under Section 144 CrPC during elections)."
+      },
+      {
+        "id": "V11",
+        "name": "Other MCC violation",
+        "description": "Any other violation of the Model Code of Conduct not categorized above."
+      }
+    ]
+  },
+
+  "offline_complaint_options": {
+    "title": "Alternative Complaint Methods (Without App)",
+    "options": [
+      {
+        "method": "National Voter Helpline",
+        "contact": "1950",
+        "availability": "Available during election period",
+        "note": "Call to register complaint verbally. Complaint will be logged by the call centre."
+      },
+      {
+        "method": "Visit Returning Officer Office",
+        "description": "Citizen can visit the office of the Returning Officer (RO) of their constituency and submit a written complaint.",
+        "where_to_find": "Contact CEO Kerala website (https://www.ceo.kerala.gov.in) for Kottayam RO contact details."
+      },
+      {
+        "method": "District Election Officer (DEO)",
+        "description": "Complaints may also be submitted to the District Election Officer, Kottayam.",
+        "address_note": "DEO office is typically at the District Collectorate, Kottayam."
+      },
+      {
+        "method": "SUVIDHA Portal",
+        "description": "Permission and complaint portal for candidates and political parties.",
+        "portal": "https://suvidha.eci.gov.in"
+      }
+    ]
+  },
+
+  "important_notes": [
+    "cVIGIL is active ONLY after the Model Code of Conduct (MCC) comes into effect — i.e., from election notification date.",
+    "Do not submit false or frivolous complaints. Action may be taken against misuse.",
+    "Video evidence gives the fastest response. Photo is also accepted.",
+    "GPS location is mandatory for complaints — location spoofing invalidates the complaint.",
+    "Vaakku does not simulate or file complaints. It only provides guidance and redirects to official channels."
+  ],
+
+  "vaakku_bot_behaviour": {
+    "can_do": [
+      "Explain cVIGIL steps clearly",
+      "Identify the correct violation category",
+      "Share app download link",
+      "Provide helpline 1950",
+      "Explain offline alternatives",
+      "Share resolution SLA expectations"
+    ],
+    "cannot_do": [
+      "File a complaint on behalf of the user",
+      "Track complaint status directly",
+      "Guarantee action within 100 minutes",
+      "Intervene in live complaints"
+    ]
+  },
+
+  "resources": {
+    "cvigil_official_page": "https://eci.gov.in/cvigil/",
+    "cvigil_portal": "https://cvigil.eci.gov.in",
+    "voter_helpline": "1950",
+    "ceo_kerala": "https://www.ceo.kerala.gov.in",
+    "eci_main": "https://www.eci.gov.in"
+  }
+}

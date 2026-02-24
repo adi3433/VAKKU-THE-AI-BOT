@@ -12,8 +12,9 @@ import { embedQuery, embedDocuments, cosineSimilarity } from './embeddings';
 import { getConfig } from '@/lib/fireworks';
 import { getAllBooths, type BoothRecord } from '@/lib/booth-data';
 
-// ── Sample Knowledge Base (seeded data for proof-of-concept) ──
+// ── V5 Knowledge Base — Core + Dataset-grounded passages ──
 const CORE_KNOWLEDGE_BASE: RetrievedPassage[] = [
+  // ── Original 8 core passages ──────────────────────────────
   {
     id: 'kb-001',
     content:
@@ -118,6 +119,133 @@ const CORE_KNOWLEDGE_BASE: RetrievedPassage[] = [
     score: 0,
     method: 'vector',
   },
+
+  // ── V5: Voting Rules passages (from voting_rules.json) ────
+  {
+    id: 'kb-v5-vr-001',
+    content:
+      'Polling hours in Kerala are from 7:00 AM to 6:00 PM. The first 30 minutes (6:30 AM – 7:00 AM) are reserved for mock polls in the presence of polling agents. Voters who are in the queue at 6:00 PM will be allowed to vote.',
+    metadata: { source: 'ECI — Voting Rules', url: 'https://eci.gov.in/poll-timing', lastUpdated: '2026-01-15', section: 'Poll Timing' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vr-002',
+    content:
+      '12 accepted photo ID documents at the polling booth: (1) EPIC, (2) Aadhaar, (3) Passport, (4) Driving License, (5) PAN Card, (6) NPR Smart Card, (7) MNREGA Job Card, (8) RSBY Health Insurance Card, (9) Bank/Post Office passbook with photo, (10) PSU/Government Service ID, (11) Pension document with photo, (12) MP/MLA/MLC identity card.',
+    metadata: { source: 'ECI — Accepted ID', url: 'https://eci.gov.in/voter-id-documents', lastUpdated: '2026-01-15', section: 'ID Documents' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vr-003',
+    content:
+      'Step-by-step voting process: (1) Stand in queue at your assigned booth. (2) Show accepted photo ID to the polling officer. (3) Get your left index finger inked with indelible ink. (4) Receive a ballot slip. (5) Enter the voting compartment. (6) Press the button on the EVM next to your chosen candidate. (7) Check the VVPAT slip (visible for 7 seconds). (8) Exit the booth. (9) Your vote is secret — nobody can see your choice.',
+    metadata: { source: 'ECI — Voting Process', url: 'https://eci.gov.in/voting-process', lastUpdated: '2026-01-15', section: 'Voting Process' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vr-004',
+    content:
+      'Prohibited items at polling stations: mobile phones, cameras, arms, loud speakers, party flags/banners within 200m. Strict silence period of 48 hours before polling day — no campaigning allowed.',
+    metadata: { source: 'ECI — Prohibited Items', url: 'https://eci.gov.in/voting-rules', lastUpdated: '2026-01-15', section: 'Prohibited Items' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vr-005',
+    content:
+      'PwD voter facilities: wheelchair ramps at all polling stations, Braille-enabled dummy ballots for visually impaired voters, companion-assisted voting with Presiding Officer permission, priority entry for elderly/disabled voters, home voting option for those with 40%+ disability.',
+    metadata: { source: 'ECI — PwD Facilities', url: 'https://eci.gov.in/pwd-facilities', lastUpdated: '2026-01-15', section: 'PwD Facilities' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vr-006',
+    content:
+      'Tender vote: If someone has already voted using your identity, you can cast a "tender vote" on a paper ballot after informing the Presiding Officer. Your complaint will be recorded in Form 17A.',
+    metadata: { source: 'ECI — Tender Vote', url: 'https://eci.gov.in/tender-vote', lastUpdated: '2026-01-15', section: 'Tender Vote' },
+    score: 0, method: 'vector',
+  },
+
+  // ── V5: Voter Services / ECI Forms passages ───────────────
+  {
+    id: 'kb-v5-vs-001',
+    content:
+      'Form 6 is for new voter registration. Eligibility: Indian citizen, 18+ years old on January 1 qualifying date, ordinary resident of the constituency. Required documents: proof of age (birth certificate, school leaving cert, passport, PAN, or Aadhaar), proof of address, and passport-size photograph. Apply at voters.eci.gov.in or visit your ERO.',
+    metadata: { source: 'ECI — Form 6', url: 'https://voters.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Forms' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vs-002',
+    content:
+      'Form 6A is for overseas/NRI voter registration. Eligibility: Indian citizen living abroad with valid passport. Required documents: valid Indian passport, proof of overseas address, original address in India. NRI voters must vote in person at their enrolled constituency polling station.',
+    metadata: { source: 'ECI — Form 6A', url: 'https://voters.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Forms' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vs-003',
+    content:
+      'Form 7 is for objection to inclusion / request for deletion from electoral roll. Used to report deceased voters, shifted voters, or duplicate entries. Required: EPIC number of entry to be objected, supporting evidence, applicant\'s own voter ID.',
+    metadata: { source: 'ECI — Form 7', url: 'https://voters.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Forms' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vs-004',
+    content:
+      'Form 8 is used for corrections and updates to voter ID: name correction, address change (within constituency), photo update, PwD marking, replacement of lost/damaged EPIC card, and change of constituency (shifting residence). Seven sub-variants exist (Form 8-1 through 8-7).',
+    metadata: { source: 'ECI — Form 8', url: 'https://voters.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Forms' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-vs-005',
+    content:
+      'Form 12C is used by notified government employees who are posted outside their constituency during election duty. It allows them to vote as a service voter through postal ballot. Required: Service ID, posting order, Form 12C filled and attested by head of office.',
+    metadata: { source: 'ECI — Form 12C', url: 'https://voters.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Forms' },
+    score: 0, method: 'vector',
+  },
+
+  // ── V5: Complaint / cVIGIL passages ───────────────────────
+  {
+    id: 'kb-v5-cp-001',
+    content:
+      'cVIGIL is the Election Commission\'s mobile app for reporting Model Code of Conduct violations. Steps: (1) Download cVIGIL from Play Store/App Store. (2) Enable GPS and camera permissions. (3) Capture photo/video of the violation (max 2 min video). (4) Add a brief description. (5) Submit — the app auto-captures location and timestamp. (6) Receive a tracking ID to follow up. Reports are resolved within 100 minutes under ECI\'s protocol.',
+    metadata: { source: 'ECI — cVIGIL', url: 'https://cvigil.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Complaints' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-cp-002',
+    content:
+      'Types of election violations reportable via cVIGIL: distribution of money (V01), distribution of liquor (V02), paid news/advertisements violating rules (V03), illegal use of vehicles for campaigning (V04), intimidation/threat to voters (V05), illegal hoarding/banners/posters (V06), misuse of government resources (V07), violation of silence period (V08), illegal arms display (V09), campaign during prohibited hours (V10), booth capturing (V11).',
+    metadata: { source: 'ECI — Violation Types', url: 'https://cvigil.eci.gov.in/', lastUpdated: '2026-01-15', section: 'Violations' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-cp-003',
+    content:
+      'Offline complaint alternatives (without cVIGIL app): (1) Call voter helpline 1950. (2) Visit the nearest Returning Officer / Assistant Returning Officer. (3) Write to the District Election Officer. (4) Contact the booth-level officer (BLO) in your area.',
+    metadata: { source: 'ECI — Offline Complaints', url: 'https://eci.gov.in/complaints', lastUpdated: '2026-01-15', section: 'Complaints' },
+    score: 0, method: 'vector',
+  },
+
+  // ── V5: Election Timeline passages ────────────────────────
+  {
+    id: 'kb-v5-tl-001',
+    content:
+      '2026 Kerala Legislative Assembly Election key dates: Official dates have NOT yet been announced by the Election Commission of India. Expected announcement window: January–February 2026. All dates including election notification, nomination, scrutiny, withdrawal, poll date, and counting date are currently TBA. Visit eci.gov.in or ceo.kerala.gov.in for updates.',
+    metadata: { source: 'ECI — Election Timeline', url: 'https://eci.gov.in/', lastUpdated: '2026-01-15', section: 'Timeline' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-tl-002',
+    content:
+      'Kottayam district has 9 assembly constituencies for 2026 elections: (42) Vaikom, (43) Kottayam, (44) Puthuppally, (45) Changanassery, (46) Kanjirappally, (47) Pala, (48) Kaduthuruthy, (49) Ettumanoor, (50) Erattupetta. All fall in the House of the People as declared by the Delimitation Commission.',
+    metadata: { source: 'CEO Kerala — Constituencies', url: 'https://ceokerala.gov.in/kottayam', lastUpdated: '2026-01-15', section: 'Constituencies' },
+    score: 0, method: 'vector',
+  },
+  {
+    id: 'kb-v5-tl-003',
+    content:
+      'Model Code of Conduct (MCC): The MCC comes into effect from the date of election announcement and is lifted on the date results are declared. It governs the conduct of political parties, candidates, and the ruling government. Current status: NOT IN EFFECT (pending 2026 election announcement).',
+    metadata: { source: 'ECI — MCC', url: 'https://eci.gov.in/mcc', lastUpdated: '2026-01-15', section: 'MCC' },
+    score: 0, method: 'vector',
+  },
 ];
 
 // ── Load booth data into knowledge base ───────────────────────────
@@ -137,13 +265,14 @@ function boothToPassage(booth: BoothRecord): RetrievedPassage {
   };
 }
 
-// Merged knowledge base: 8 core + 171 booth entries
+// Merged knowledge base: V5 expanded core + 171 booth entries
 let _mergedKB: RetrievedPassage[] | null = null;
 
 function getKnowledgeBase(): RetrievedPassage[] {
   if (_mergedKB) return _mergedKB;
   const boothPassages = getAllBooths().map(boothToPassage);
   _mergedKB = [...CORE_KNOWLEDGE_BASE, ...boothPassages];
+  console.log(`[retriever] KB initialized: ${CORE_KNOWLEDGE_BASE.length} core (V5) + ${boothPassages.length} booth = ${_mergedKB.length} total passages`);
   return _mergedKB;
 }
 

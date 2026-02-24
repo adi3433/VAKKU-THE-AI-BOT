@@ -1,11 +1,13 @@
 /**
- * Safety Module — Non-persuasion & Content Moderation
- * ─────────────────────────────────────────────────────
- * Rules:
+ * Safety Module — Non-persuasion, Content Moderation & Civic Boundaries
+ * ──────────────────────────────────────────────────────────────────────
+ * V5 Rules:
  * - Never recommend a party/candidate
  * - If asked for political advice, respond neutrally with official sources
  * - Detect & redact PII in outputs
  * - Flag low-confidence answers for escalation
+ * - Enforce civic boundary: reject out-of-scope queries gracefully
+ * - Never simulate complaint filing or roll modification
  */
 
 interface SafetyResult {
@@ -58,8 +60,22 @@ const PII_PATTERNS = [
 ];
 
 const NEUTRAL_RESPONSES: Record<string, string> = {
-  en: "I'm an impartial voter information assistant. I cannot recommend any political party or candidate. For election-related questions, I can help with registration, booth locations, required documents, and reporting violations. Please visit eci.gov.in for official information.",
-  ml: 'ഞാൻ ഒരു നിഷ്പക്ഷ വോട്ടർ വിവര സഹായിയാണ്. ഒരു രാഷ്ട്രീയ പാർട്ടിയെയോ സ്ഥാനാർത്ഥിയെയോ ശുപാർശ ചെയ്യാൻ എനിക്ക് കഴിയില്ല. തിരഞ്ഞെടുപ്പുമായി ബന്ധപ്പെട്ട ചോദ്യങ്ങൾക്ക്, രജിസ്ട്രേഷൻ, ബൂത്ത് ലൊക്കേഷനുകൾ, ആവശ്യമായ രേഖകൾ, ലംഘനങ്ങൾ റിപ്പോർട്ട് ചെയ്യൽ എന്നിവയിൽ സഹായിക്കാം. ഔദ്യോഗിക വിവരങ്ങൾക്ക് eci.gov.in സന്ദർശിക്കുക.',
+  en: "I'm an impartial voter information assistant. I cannot recommend any political party or candidate. For election-related questions, I can help with registration, booth locations, required documents, voting rules, complaint filing, and election schedules. Please visit eci.gov.in for official information.",
+  ml: 'ഞാൻ ഒരു നിഷ്പക്ഷ വോട്ടർ വിവര സഹായിയാണ്. ഒരു രാഷ്ട്രീയ പാർട്ടിയെയോ സ്ഥാനാർത്ഥിയെയോ ശുപാർശ ചെയ്യാൻ എനിക്ക് കഴിയില്ല. രജിസ്ട്രേഷൻ, ബൂത്ത് ലൊക്കേഷനുകൾ, ആവശ്യമായ രേഖകൾ, വോട്ടിങ് നിയമങ്ങൾ, പരാതി നൽകൽ, തിരഞ്ഞെടുപ്പ് ഷെഡ്യൂൾ എന്നിവയിൽ സഹായിക്കാം. eci.gov.in സന്ദർശിക്കുക.',
+};
+
+// V5: Out-of-scope topic patterns (non-election queries)
+const OUT_OF_SCOPE_PATTERNS = [
+  /\b(weather|sports|cricket|movie|recipe|joke|song|game)\b/i,
+  /\b(stock|market|crypto|bitcoin|investment)\b/i,
+  /\b(homework|assignment|math\s+problem|solve\s+equation)\b/i,
+  /\b(write\s+me\s+(a|an)|compose|draft\s+(a|an)\s+(letter|essay|email))\b/i,
+  /\b(translate\s+(?!.*voter)(?!.*election)(?!.*booth))\b/i,
+];
+
+const OUT_OF_SCOPE_RESPONSES: Record<string, string> = {
+  en: "I'm Vaakku, a voter information assistant for Kottayam district elections. I can only help with election-related topics: voter registration, booth information, voting rules, election schedule, and complaint filing. For other queries, please use a general-purpose assistant. 📞 Election Helpline: 1950",
+  ml: 'ഞാൻ വാക്ക്, കോട്ടയം ജില്ല തിരഞ്ഞെടുപ്പ് വിവര സഹായി ആണ്. വോട്ടർ രജിസ്ട്രേഷൻ, ബൂത്ത് വിവരങ്ങൾ, വോട്ടിങ് നിയമങ്ങൾ, തിരഞ്ഞെടുപ്പ് ഷെഡ്യൂൾ, പരാതി നൽകൽ എന്നിവയിൽ മാത്രമേ സഹായിക്കാൻ കഴിയൂ. 📞 ഹെൽപ്‌ലൈൻ: 1950',
 };
 
 /**
@@ -92,6 +108,19 @@ export function safetyCheck(
       const isMalayalam = /[\u0D00-\u0D7F]/.test(userQuery);
       safeText = NEUTRAL_RESPONSES[isMalayalam ? 'ml' : 'en'];
       break;
+    }
+  }
+
+  // V5: Check for out-of-scope topics
+  if (!flagged) {
+    for (const pattern of OUT_OF_SCOPE_PATTERNS) {
+      if (pattern.test(userQuery)) {
+        flagged = true;
+        reason = 'Out-of-scope topic detected';
+        const isMalayalam = /[\u0D00-\u0D7F]/.test(userQuery);
+        safeText = OUT_OF_SCOPE_RESPONSES[isMalayalam ? 'ml' : 'en'];
+        break;
+      }
     }
   }
 
@@ -131,4 +160,11 @@ export function safetyCheck(
  */
 export function isPoliticalQuery(query: string): boolean {
   return POLITICAL_PATTERNS.some((p) => p.test(query));
+}
+
+/**
+ * V5: Check if a query is completely out of scope for the election assistant
+ */
+export function isOutOfScope(query: string): boolean {
+  return OUT_OF_SCOPE_PATTERNS.some((p) => p.test(query));
 }

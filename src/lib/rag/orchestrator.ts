@@ -135,9 +135,19 @@ export async function ragOrchestrate(input: RAGInput): Promise<RAGOutput> {
     modelSelfScore = Math.min(1, Math.max(0, parseFloat(scoreMatch[1])));
   }
   // Remove the CONFIDENCE_SCORE line and any trailing disclaimers from user-facing text
-  const cleanText = generated.text
+  let cleanText = generated.text
     .replace(/\n?CONFIDENCE_SCORE:\s*[\d.]+[^\n]*/g, '')
     .trim();
+
+  // Safety net: if generator returned empty (all reasoning, no answer) — use topic-contextual fallback
+  if (!cleanText && topPassages.length > 0) {
+    const fallbackLocale = locale === 'ml' ? 'ml' : 'en';
+    const bestSource = topPassages[0];
+    cleanText = fallbackLocale === 'ml'
+      ? `ഈ വിഷയത്തിൽ ലഭ്യമായ വിവരങ്ങൾ:\n\n${bestSource.content.substring(0, 500)}\n\n[Source 1: ${bestSource.metadata.source}]\n\nകൂടുതൽ വിവരങ്ങൾക്ക് ${bestSource.metadata.url} സന്ദർശിക്കുക. 📞 ഹെൽപ്‌ലൈൻ: 1950`
+      : `Here is the relevant information:\n\n${bestSource.content.substring(0, 500)}\n\n[Source 1: ${bestSource.metadata.source}]\n\nFor more details, visit ${bestSource.metadata.url}. 📞 Helpline: 1950`;
+    modelSelfScore = 0.6; // Lower confidence for fallback
+  }
 
   // ── Build sources with citation ──────────────────────────────
   const sources: ChatSource[] = topPassages.map((p) => ({

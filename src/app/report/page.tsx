@@ -121,7 +121,7 @@ export default function ReportPage() {
                       className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                         type === vt.key
                           ? 'border-[var(--color-primary-300)] bg-[var(--color-primary-50)] text-[var(--color-primary-600)]'
-                          : 'border-[var(--color-neutral-200)] bg-white text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)]'
+                          : 'border-[var(--color-neutral-200)] bg-[var(--surface-primary)] text-[var(--color-neutral-600)] hover:bg-[var(--color-neutral-50)]'
                       } ${isMl ? 'font-ml' : ''}`}
                     >
                       {isMl ? vt.ml : vt.en}
@@ -139,7 +139,7 @@ export default function ReportPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  className={`mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition resize-none ${isMl ? 'font-ml' : ''}`}
+                  className={`mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition resize-none ${isMl ? 'font-ml' : ''}`}
                   placeholder={isMl ? 'എന്താണ് സംഭവിച്ചത് വിവരിക്കുക...' : 'Describe what happened...'}
                 />
               </div>
@@ -156,7 +156,7 @@ export default function ReportPage() {
                 />
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--color-neutral-200)] bg-white py-4 text-sm text-[var(--color-neutral-500)] hover:border-[var(--color-primary-300)] hover:text-[var(--color-primary-500)] transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--color-neutral-200)] bg-[var(--surface-primary)] py-4 text-sm text-[var(--color-neutral-500)] hover:border-[var(--color-primary-300)] hover:text-[var(--color-primary-500)] transition-colors"
                 >
                   <CameraIcon className="h-5 w-5" />
                   {t.uploadMedia}
@@ -169,7 +169,7 @@ export default function ReportPage() {
               </div>
 
               {/* Location */}
-              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--color-neutral-200)] bg-white p-3">
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] p-3">
                 <input
                   type="checkbox"
                   checked={useLocation}

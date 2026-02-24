@@ -63,7 +63,7 @@ export default function RegistrationPage() {
                   onClick={() => { setTab(item.key); setResult(null); }}
                   className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
                     tab === item.key
-                      ? 'bg-white text-[var(--color-primary-600)] shadow-sm'
+                      ? 'bg-[var(--surface-primary)] text-[var(--color-primary-600)] shadow-sm'
                       : 'text-[var(--color-neutral-500)] hover:text-[var(--color-neutral-700)]'
                   } ${isMl ? 'font-ml' : ''}`}
                 >
@@ -90,7 +90,7 @@ export default function RegistrationPage() {
                     value={voterId}
                     onChange={(e) => setVoterId(e.target.value.toUpperCase())}
                     placeholder="e.g., ABC1234567"
-                    className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
+                    className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
                   />
                 </div>
               ) : (
@@ -103,7 +103,7 @@ export default function RegistrationPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
+                      className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
                     />
                   </div>
                   <div>
@@ -114,7 +114,7 @@ export default function RegistrationPage() {
                       type="date"
                       value={dob}
                       onChange={(e) => setDob(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
+                      className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
                     />
                   </div>
                   <div>
@@ -125,7 +125,7 @@ export default function RegistrationPage() {
                       type="text"
                       value={constituency}
                       onChange={(e) => setConstituency(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
+                      className="mt-1 w-full rounded-xl border border-[var(--color-neutral-200)] bg-[var(--surface-primary)] px-4 py-3 text-sm text-[var(--text-primary)] shadow-sm outline-none focus:border-[var(--color-primary-300)] focus:ring-2 focus:ring-[var(--color-primary-100)] transition"
                     />
                   </div>
                 </>
@@ -153,31 +153,31 @@ export default function RegistrationPage() {
                   transition={{ duration: 0.3 }}
                   className={`mt-6 rounded-2xl border p-5 ${
                     result === 'found'
-                      ? 'border-emerald-200 bg-emerald-50'
-                      : 'border-red-200 bg-red-50'
+                      ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/30'
+                      : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/30'
                   }`}
                 >
                   {result === 'found' ? (
                     <div>
-                      <p className={`font-semibold text-emerald-700 ${isMl ? 'font-ml' : ''}`}>
+                      <p className={`font-semibold text-emerald-700 dark:text-emerald-400 ${isMl ? 'font-ml' : ''}`}>
                         ✅ {isMl ? 'രജിസ്ട്രേഷൻ കണ്ടെത്തി!' : 'Registration Found!'}
                       </p>
-                      <div className="mt-3 space-y-1.5 text-sm text-emerald-600">
+                      <div className="mt-3 space-y-1.5 text-sm text-emerald-600 dark:text-emerald-400">
                         <p><strong>{isMl ? 'പേര്' : 'Name'}:</strong> Demo Voter</p>
                         <p><strong>{isMl ? 'നിയോജകമണ്ഡലം' : 'Constituency'}:</strong> Kottayam</p>
                         <p><strong>{isMl ? 'ബൂത്ത്' : 'Booth'}:</strong> KTM-001</p>
                         <p><strong>{isMl ? 'സ്ഥിതി' : 'Status'}:</strong> {isMl ? 'സജീവം' : 'Active'}</p>
                       </div>
-                      <p className="mt-3 text-xs text-emerald-500">
+                      <p className="mt-3 text-xs text-emerald-500 dark:text-emerald-500">
                         {isMl ? 'ഉറവിടം: CEO Kerala electoralsearch.in' : 'Source: CEO Kerala electoralsearch.in'}
                       </p>
                     </div>
                   ) : (
                     <div>
-                      <p className={`font-semibold text-red-700 ${isMl ? 'font-ml' : ''}`}>
+                      <p className={`font-semibold text-red-700 dark:text-red-400 ${isMl ? 'font-ml' : ''}`}>
                         ❌ {isMl ? 'രജിസ്ട്രേഷൻ കണ്ടെത്തിയില്ല' : 'Registration Not Found'}
                       </p>
-                      <p className={`mt-2 text-sm text-red-600 ${isMl ? 'font-ml' : ''}`}>
+                      <p className={`mt-2 text-sm text-red-600 dark:text-red-400 ${isMl ? 'font-ml' : ''}`}>
                         {isMl
                           ? 'ദയവായി വിശദാംശങ്ങൾ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക, അല്ലെങ്കിൽ electoralsearch.in സന്ദർശിക്കുക.'
                           : 'Please verify your details and try again, or visit electoralsearch.in.'}

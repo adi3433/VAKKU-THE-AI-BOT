@@ -22,6 +22,8 @@ export function useChat() {
     sessionId,
     locale,
     setQuickActions,
+    userLatitude,
+    userLongitude,
   } = useVaakkuStore();
 
   const send = useCallback(
@@ -45,6 +47,9 @@ export function useChat() {
           locale,
           sessionId,
           conversationHistory: [...messages, userMsg].slice(-10), // last 10 msgs
+          ...(userLatitude != null && userLongitude != null
+            ? { latitude: userLatitude, longitude: userLongitude }
+            : {}),
         });
 
         const assistantMsg: ChatMessage = {
@@ -83,7 +88,7 @@ export function useChat() {
         setTyping(false);
       }
     },
-    [messages, addMessage, setTyping, sessionId, locale, setQuickActions]
+    [messages, addMessage, setTyping, sessionId, locale, setQuickActions, userLatitude, userLongitude]
   );
 
   return {

@@ -189,3 +189,74 @@ export function formatBoothResult(booth: BoothRecord, locale: 'en' | 'ml'): stri
 - **GPS:** ${booth.lat}°N, ${booth.lng}°E
 - [Get Directions](${mapsUrl})`;
 }
+
+// ── GPS-based nearest booth search (Haversine) ────────────────────
+
+/**
+ * Haversine distance in kilometers between two GPS coordinates.
+ */
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+/**
+ * Find nearest polling booths by GPS coordinates.
+ * Only considers booths that have valid GPS data (lat/lng > 0).
+ * Returns booths sorted by distance, with distance in km attached.
+ */
+export function searchNearestBooths(
+  lat: number,
+  lng: number,
+  maxResults = 5,
+  maxDistanceKm = 10
+): Array<BoothRecord & { distanceKm: number }> {
+  const booths = getAllBooths();
+
+  const withDistance = booths
+    .filter((b) => b.lat > 0 && b.lng > 0) // Only booths with valid GPS
+    .map((booth) => ({
+      ...booth,
+      distanceKm: haversineDistance(lat, lng, booth.lat, booth.lng),
+    }))
+    .filter((b) => b.distanceKm <= maxDistanceKm) // Within max radius
+    .sort((a, b) => a.distanceKm - b.distanceKm); // Closest first
+
+  return withDistance.slice(0, maxResults);
+}
+
+/**
+ * Format a nearest booth result with distance info.
+ */
+export function formatNearestBoothResult(
+  booth: BoothRecord & { distanceKm: number },
+  locale: 'en' | 'ml'
+): string {
+  const mapsUrl = getGoogleMapsDirectionsUrl(booth.lat, booth.lng);
+  const distStr = booth.distanceKm < 1
+    ? `${Math.round(booth.distanceKm * 1000)}m`
+    : `${booth.distanceKm.toFixed(1)}km`;
+
+  if (locale === 'ml') {
+    return `**പോളിംഗ് സ്റ്റേഷൻ ${booth.stationNumber}** — ${booth.title}
+- **ദൂരം:** 📍 ${distStr}
+- **ലാൻഡ്‌മാർക്ക്:** ${booth.landmark}
+- **GPS:** ${booth.lat}°N, ${booth.lng}°E
+- [Google Maps-ൽ വഴി കാണുക](${mapsUrl})`;
+  }
+
+  return `**Polling Station ${booth.stationNumber}** — ${booth.title}
+- **Distance:** 📍 ${distStr}
+- **Landmark:** ${booth.landmark}
+- **GPS:** ${booth.lat}°N, ${booth.lng}°E
+- [Get Directions](${mapsUrl})`;
+}
