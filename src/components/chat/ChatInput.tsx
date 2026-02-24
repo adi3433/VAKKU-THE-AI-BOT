@@ -50,9 +50,9 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
     );
   };
 
-  useEffect(() => {
-    if (transcript) setText(transcript);
-  }, [transcript]);
+  // Sync transcript from speech recognition to local text state
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { if (transcript) setText(transcript); }, [transcript]);
 
   useEffect(() => {
     const ta = textareaRef.current;

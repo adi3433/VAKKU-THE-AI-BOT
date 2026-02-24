@@ -6,7 +6,7 @@
  */
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

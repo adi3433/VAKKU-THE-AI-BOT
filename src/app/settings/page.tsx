@@ -24,7 +24,6 @@ export default function SettingsPage() {
     setAccessibilityMode,
     memoryEnabled,
     setMemoryEnabled,
-    memoryConsentGiven,
     setMemoryConsentGiven,
     userId,
   } = useVaakkuStore();

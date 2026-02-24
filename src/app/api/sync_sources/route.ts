@@ -8,7 +8,7 @@ import type { AdminSyncRequest, AdminSyncResponse } from '@/types';
 export async function POST(request: NextRequest) {
   try {
     const body: AdminSyncRequest = await request.json();
-    const { sourceType, sourceUrl, data } = body;
+    const { sourceType, sourceUrl, data: _data } = body;
 
     // TODO: In production, authenticate admin and process sync
     const jobId = uuid();

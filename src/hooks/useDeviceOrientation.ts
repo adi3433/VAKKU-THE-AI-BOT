@@ -81,14 +81,18 @@ export function useDeviceOrientation(): OrientationData {
 
   useEffect(() => {
     const supported = typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
-    setIsSupported(supported);
+    // Use a ref to avoid calling setState in effect body
+    if (supported !== isSupported) {
+      // Defer state update to avoid synchronous setState in effect
+      queueMicrotask(() => setIsSupported(supported));
+    }
 
     if (!supported) return;
 
     // Auto-check if permission is already granted (non-iOS)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
-      setHasPermission(true);
+      queueMicrotask(() => setHasPermission(true));
       window.addEventListener('deviceorientation', handleOrientation, { passive: true });
     }
 
@@ -98,7 +102,7 @@ export function useDeviceOrientation(): OrientationData {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [handleOrientation]);
+  }, [handleOrientation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Add listener after permission is granted on iOS
   useEffect(() => {

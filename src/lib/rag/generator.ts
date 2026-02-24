@@ -5,7 +5,7 @@
  * Falls back to template-based responses when API is unavailable.
  */
 
-import { chatCompletion, chatCompletionStream, getConfig, estimateTokens, trimToTokenBudget } from '@/lib/fireworks';
+import { chatCompletion, chatCompletionStream, getConfig, trimToTokenBudget } from '@/lib/fireworks';
 import type { ChatMessage as FWMessage } from '@/lib/fireworks';
 
 interface GenerationResult {

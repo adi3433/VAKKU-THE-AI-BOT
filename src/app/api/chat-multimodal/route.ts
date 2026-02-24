@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       sessionId = uuid(),
       imageBase64,
       audioBase64,
-      contextMode = 'full',
+      contextMode: _contextMode = 'full',
       userId,
     } = body;
 

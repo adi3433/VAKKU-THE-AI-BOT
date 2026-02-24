@@ -7,7 +7,6 @@
 import axios from 'axios';
 import type {
   ChatRequest,
-  ChatResponse,
   ChatResponseV2,
   BoothSearchRequest,
   BoothSearchResponse,
@@ -25,7 +24,6 @@ import type {
   MemoryConsentRequest,
   MemoryConsentResponse,
   MemoryExportResponse,
-  ConversationListItem,
 } from '@/types';
 
 const api = axios.create({

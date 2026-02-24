@@ -9,7 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import type { BoothSearchResponse, BoothInfo, ChatSource } from '@/types';
-import { searchBooths, searchNearestBooths, getAllBooths, getGoogleMapsDirectionsUrl, type BoothRecord } from '@/lib/booth-data';
+import { searchBooths, searchNearestBooths, getAllBooths, type BoothRecord } from '@/lib/booth-data';
 
 function boothRecordToBoothInfo(record: BoothRecord): BoothInfo {
   return {

@@ -223,7 +223,7 @@ function getSilencePeriod(locale: string): string {
 /**
  * Get indelible ink rules
  */
-function getIndelibleInk(locale: string): string {
+function getIndelibleInk(_locale: string): string {
   const data = votingRulesData.indelible_ink_rules;
   return `✍️ **Indelible Ink**\n\n- **Applied on:** ${data.applied_on}\n- **Purpose:** ${data.purpose}\n- **Permanence:** ${data.permanence}`;
 }

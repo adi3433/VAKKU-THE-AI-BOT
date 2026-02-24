@@ -6,7 +6,6 @@
  *   Response: { referenceNumber, status: 'submitted', message, messageMl }
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { hashIdentifier } from '@/lib/privacy';
 import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 import type { ViolationReportRequest, ViolationReportResponse } from '@/types';
 

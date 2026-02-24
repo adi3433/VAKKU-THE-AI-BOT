@@ -12,7 +12,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  InformationCircleIcon,
   XMarkIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';

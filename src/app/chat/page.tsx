@@ -32,7 +32,6 @@ export default function ChatPage() {
   const resetSession = useVaakkuStore((s) => s.resetSession);
   const addMessage = useVaakkuStore((s) => s.addMessage);
   const setTyping = useVaakkuStore((s) => s.setTyping);
-  const sidebarOpen = useVaakkuStore((s) => s.sidebarOpen);
   const toggleSidebar = useVaakkuStore((s) => s.toggleSidebar);
   const incognitoMode = useVaakkuStore((s) => s.incognitoMode);
 
@@ -75,7 +74,7 @@ export default function ChatPage() {
   };
 
   const handleFileUpload = useCallback(
-    async (base64: string, type: 'image' | 'document' | 'audio', mimeType: string) => {
+    async (base64: string, type: 'image' | 'document' | 'audio', _mimeType: string) => {
       const userMessage = locale === 'ml'
         ? `[📎 ${type === 'image' ? 'ചിത്രം' : 'ഡോക്യുമെന്റ്'} അപ്‌ലോഡ് ചെയ്തു]`
         : `[📎 ${type === 'image' ? 'Image' : 'Document'} uploaded]`;

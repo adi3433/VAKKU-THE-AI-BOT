@@ -73,6 +73,7 @@ export function useParallax(config: ParallaxConfig = {}): ParallaxResult {
       const clampedY = Math.max(-maxDisplacement, Math.min(maxDisplacement, ((beta - 45) / 45) * maxDisplacement * intensity));
       rawX.set(clampedX);
       rawY.set(clampedY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInputMethod('device');
     }
   }, [gamma, beta, isSupported, hasPermission, maxDisplacement, intensity, rawX, rawY]);
@@ -119,7 +120,9 @@ export function useParallax(config: ParallaxConfig = {}): ParallaxResult {
 
   // Ref to prevent re-renders of inputMethod check
   const methodRef = useRef(inputMethod);
-  methodRef.current = inputMethod;
+  useEffect(() => {
+    methodRef.current = inputMethod;
+  }, [inputMethod]);
 
   return { x, y, rotateX, rotateY, inputMethod };
 }

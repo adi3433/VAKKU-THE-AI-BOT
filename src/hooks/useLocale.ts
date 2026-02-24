@@ -5,7 +5,7 @@
 
 import { useVaakkuStore } from '@/lib/store';
 import { strings } from '@/lib/i18n';
-import type { Locale } from '@/types';
+// Locale type inferred from store
 
 export function useLocale() {
   const locale = useVaakkuStore((s) => s.locale);

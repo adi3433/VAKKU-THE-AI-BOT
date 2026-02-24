@@ -8,7 +8,7 @@
  */
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   XMarkIcon,
@@ -19,11 +19,9 @@ import {
   EyeSlashIcon,
 } from '@heroicons/react/24/solid';
 import {
-  StarIcon as StarOutlineIcon,
   MapPinIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
-  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useVaakkuStore } from '@/lib/store';
 import { useLocale } from '@/hooks/useLocale';
@@ -37,7 +35,7 @@ interface ChatSidebarProps {
   onDeleteConversation?: (id: string) => void;
 }
 
-export function ChatSidebar({ onSelectConversation, onNewConversation, onToggleStar, onTogglePin, onDeleteConversation }: ChatSidebarProps) {
+export function ChatSidebar({ onSelectConversation, onNewConversation, onToggleStar, onTogglePin, onDeleteConversation: _onDeleteConversation }: ChatSidebarProps) {
   const {
     sidebarOpen,
     toggleSidebar,
@@ -271,8 +269,8 @@ function ConversationItem({
   isActive,
   locale,
   onSelect,
-  onToggleStar,
-  onTogglePin,
+  onToggleStar: _onToggleStar,
+  onTogglePin: _onTogglePin,
 }: {
   conversation: ConversationListItem;
   isActive: boolean;

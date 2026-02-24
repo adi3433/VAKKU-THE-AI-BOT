@@ -36,7 +36,7 @@ export function useSpeechRecognition(locale: Locale): SpeechRecognitionHook {
     if (typeof window === 'undefined') return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    setIsSupported(!!SpeechRecognition);
+    queueMicrotask(() => setIsSupported(!!SpeechRecognition));
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();

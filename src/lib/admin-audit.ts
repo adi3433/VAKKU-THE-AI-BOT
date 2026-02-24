@@ -9,7 +9,6 @@
  * PII is hashed in all responses.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { hashIdentifier } from '@/lib/privacy';
 import type { QueryLog, AuditLogEntry, Locale } from '@/types';
 
 // ── In-memory audit store (production: use PostgreSQL/ClickHouse) ─
@@ -99,7 +98,7 @@ export function handleQueryLogGet(request: NextRequest): NextResponse {
   const format = url.searchParams.get('format') || 'json'; // json or csv
 
   // Filter
-  let filtered = queryLogs.filter((log) => {
+  const filtered = queryLogs.filter((log) => {
     if (locale && log.locale !== locale) return false;
     if (log.confidence < minConfidence || log.confidence > maxConfidence) return false;
     if (escalatedOnly && !log.escalated) return false;
@@ -153,7 +152,7 @@ export function handleEscalationsGet(request: NextRequest): NextResponse {
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10), 200);
   const since = url.searchParams.get('since');
 
-  let escalated = queryLogs.filter((log) => {
+  const escalated = queryLogs.filter((log) => {
     if (!log.escalated) return false;
     if (since && log.timestamp < since) return false;
     return true;

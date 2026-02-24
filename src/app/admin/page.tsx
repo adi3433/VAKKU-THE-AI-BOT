@@ -97,8 +97,7 @@ const STATS = {
 };
 
 export default function AdminPage() {
-  const { locale, t } = useLocale();
-  const isMl = locale === 'ml';
+  const { t } = useLocale();
   const [tab, setTab] = useState<Tab>('overview');
   const [searchFilter, setSearchFilter] = useState('');
 

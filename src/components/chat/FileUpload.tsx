@@ -250,6 +250,7 @@ export function FileUpload({ onUpload, disabled = false }: FileUploadProps) {
                 >
                   {pendingUpload.preview ? (
                     <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={pendingUpload.preview}
                         alt="Upload preview"

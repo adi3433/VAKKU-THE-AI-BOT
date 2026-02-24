@@ -15,7 +15,7 @@
 
 import { processVoiceInput, type VoiceResult } from '@/lib/voice';
 import { extractDocumentFields, type VisionExtractionResult } from '@/lib/vision';
-import { ragOrchestrate, type RAGInput, type RAGOutput } from '@/lib/rag/orchestrator';
+import { ragOrchestrate, type RAGOutput } from '@/lib/rag/orchestrator';
 import { searchBooths, searchNearestBooths, formatBoothResult, formatNearestBoothResult, type BoothRecord } from '@/lib/booth-data';
 import {
   classifyQuery,

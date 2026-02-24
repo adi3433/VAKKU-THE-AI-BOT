@@ -14,7 +14,7 @@ import type { RegistrationStatusRequest, RegistrationStatusResponse } from '@/ty
 export async function POST(request: NextRequest) {
   try {
     const body: RegistrationStatusRequest = await request.json();
-    const { epicNumber, name, dob: dateOfBirth, constituency: constituencyCode } = body;
+    const { epicNumber, name, dob: _dateOfBirth, constituency: constituencyCode } = body;
 
     if (!epicNumber && !name) {
       return NextResponse.json(

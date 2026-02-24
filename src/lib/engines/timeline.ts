@@ -204,7 +204,6 @@ function getSpecificDate(dateKey: string, locale: string): string {
   if (!key) return getAllDates(locale);
 
   const entry = timelineData.key_dates[key];
-  const isMl = locale === 'ml';
 
   let response = `📅 **${entry.label}:** ${formatDate(entry.date)}\n\n`;
   response += `${entry.description}\n`;

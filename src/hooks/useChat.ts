@@ -10,7 +10,7 @@ import { useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useVaakkuStore } from '@/lib/store';
 import { sendChatMessage } from '@/lib/api-client';
-import type { ChatMessage, Locale } from '@/types';
+import type { ChatMessage } from '@/types';
 
 export function useChat() {
   const {
@@ -70,7 +70,7 @@ export function useChat() {
         if (response.actionable?.length) {
           setQuickActions(response.actionable);
         }
-      } catch (error) {
+      } catch (_error) {
         const errorMsg: ChatMessage = {
           id: uuid(),
           role: 'assistant',

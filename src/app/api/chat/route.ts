@@ -24,12 +24,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuid } from 'uuid';
 import { routeInput } from '@/lib/router';
 import { ragOrchestrate, type RAGOutput } from '@/lib/rag/orchestrator';
-import { safetyCheck, isAdversarial } from '@/lib/safety';
+import { safetyCheck } from '@/lib/safety';
 import { hashIdentifier } from '@/lib/privacy';
 import { ResponseCache } from '@/lib/fireworks';
 import { recordQueryLog, recordAuditEntry } from '@/lib/admin-audit';
 import { saveConversation } from '@/lib/chat-history';
-import { formatBoothResult, getGoogleMapsDirectionsUrl } from '@/lib/booth-data';
+import { formatBoothResult } from '@/lib/booth-data';
 import type { ChatRequest, ChatResponseV2, RetrievalTraceEntry } from '@/types';
 
 // V2: Use ResponseCache with configurable TTL instead of raw Map

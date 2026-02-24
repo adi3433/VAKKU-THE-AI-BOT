@@ -44,7 +44,7 @@ const ACTION_PATTERNS: {
 export function extractActions(
   query: string,
   responseText: string,
-  locale: string
+  _locale: string
 ): ActionItem[] {
   const combined = `${query} ${responseText}`;
   const matched: ActionItem[] = [];

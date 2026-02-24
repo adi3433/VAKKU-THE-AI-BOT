@@ -213,7 +213,7 @@ export function getFormGuidance(subIntent?: string, query?: string, locale: stri
  * Get all available forms as a summary
  */
 export function getAllFormsSummary(): string {
-  const formList = Object.entries(FORMS).map(([key, form]) => {
+  const formList = Object.entries(FORMS).map(([_key, form]) => {
     const f = form as Record<string, unknown>;
     return `- **${f.form_number}**: ${f.title} — ${f.purpose}`;
   });

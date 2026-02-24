@@ -35,7 +35,8 @@ function removeFillers(text: string, language: string): string {
 
 // ── Language detection heuristic ─────────────────────────────────
 
-const MALAYALAM_RANGE = /[\u0D00-\u0D7F]/;
+// Malayalam Unicode range used by detectLanguage below
+// const MALAYALAM_RANGE = /[\u0D00-\u0D7F]/;
 
 /**
  * Detect language from transcription text or Whisper's language tag.
