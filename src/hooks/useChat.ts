@@ -66,10 +66,8 @@ export function useChat() {
 
         addMessage(assistantMsg);
 
-        // Update quick actions if the response suggests new ones
-        if (response.actionable?.length) {
-          setQuickActions(response.actionable);
-        }
+        // actionable items are already stored on the message itself
+        // Don't overwrite the default quick actions
       } catch (_error) {
         const errorMsg: ChatMessage = {
           id: uuid(),
