@@ -406,11 +406,17 @@ export async function transcribeAudio(
 // ── Token Estimation ─────────────────────────────────────────────
 
 /**
- * Rough token estimate. ~1.3 tokens per whitespace-delimited word.
+ * Rough token estimate.
+ * English/ASCII: ~1.3 tokens per whitespace-delimited word.
+ * Malayalam/Indic scripts: ~3.5 tokens per word (complex syllable structure
+ * causes subword tokenizers to split each word into multiple tokens).
  */
 export function estimateTokens(text: string): number {
   if (!text) return 0;
-  return Math.ceil(text.split(/\s+/).length * 1.3);
+  const words = text.split(/\s+/).length;
+  // Detect Malayalam/Indic script presence for accurate estimation
+  const hasMalayalam = /[\u0D00-\u0D7F]/.test(text);
+  return Math.ceil(words * (hasMalayalam ? 3.5 : 1.3));
 }
 
 /**
@@ -418,7 +424,9 @@ export function estimateTokens(text: string): number {
  */
 export function trimToTokenBudget(text: string, maxTokens: number): string {
   const words = text.split(/\s+/);
-  const maxWords = Math.floor(maxTokens / 1.3);
+  const hasMalayalam = /[\u0D00-\u0D7F]/.test(text);
+  const tokensPerWord = hasMalayalam ? 3.5 : 1.3;
+  const maxWords = Math.floor(maxTokens / tokensPerWord);
   if (words.length <= maxWords) return text;
   return words.slice(0, maxWords).join(' ') + '…';
 }

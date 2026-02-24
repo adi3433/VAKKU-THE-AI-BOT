@@ -26,6 +26,7 @@ import {
   type ClassificationResult,
 } from '@/lib/engines';
 import type { Locale, ChatMessage } from '@/types';
+import { ubRegex } from '@/lib/unicode-boundary';
 
 // ── Input types ──────────────────────────────────────────────────
 
@@ -107,9 +108,12 @@ const STRUCTURED_PATTERNS: Array<{
 }> = [
   {
     patterns: [
-      /\b(booth|polling\s*station|ബൂത്ത്|പോളിങ്\s*സ്റ്റേഷൻ)\b/i,
-      /\b(where\s+(do\s+)?i\s+vote|എവിടെ\s*വോട്ട്)\b/i,
-      /\b(find\s+my\s+booth|my\s+booth|എന്റെ\s*ബൂത്ത്)\b/i,
+      /\b(booth|polling\s*station)\b/i,
+      ubRegex('(ബൂത്ത്|പോളിങ്\\s*സ്റ്റേഷൻ)'),
+      /\b(where\s+(do\s+)?i\s+vote)\b/i,
+      ubRegex('(എവിടെ\\s*വോട്ട്)'),
+      /\b(find\s+my\s+booth|my\s+booth)\b/i,
+      ubRegex('(എന്റെ\\s*ബൂത്ത്|എൻറെ\\s*ബൂത്ത്)'),
       /^\s*\d{1,3}\s*$/, // bare booth number
     ],
     type: 'booth_search',
@@ -117,8 +121,10 @@ const STRUCTURED_PATTERNS: Array<{
   },
   {
     patterns: [
-      /\b(registration|register|enrolled|voter\s*list|രജിസ്ട്രേഷൻ|രജിസ്റ്റർ|വോട്ടർ\s*ലിസ്റ്റ്)\b/i,
-      /\b(check.*(epic|voter\s*id)|epic\s*check|voter\s*id\s*(check|status)|എപിക്\s*ചെക്ക്)\b/i,
+      /\b(registration|register|enrolled|voter\s*list)\b/i,
+      ubRegex('(രജിസ്ട്രേഷൻ|രജിസ്റ്റർ|വോട്ടർ\\s*ലിസ്റ്റ്)'),
+      /\b(check.*(epic|voter\s*id)|epic\s*check|voter\s*id\s*(check|status))\b/i,
+      ubRegex('(എപിക്\\s*ചെക്ക്)'),
       /\b(am\s+i\s+registered|is\s+my\s+name)\b/i,
     ],
     type: 'registration_check',
@@ -126,8 +132,10 @@ const STRUCTURED_PATTERNS: Array<{
   },
   {
     patterns: [
-      /\b(report|complaint|violation|grievance|റിപ്പോർട്ട്|പരാതി|ലംഘനം)\b/i,
-      /\b(bribery|intimidation|malpractice|കൈക്കൂലി|ഭീഷണി)\b/i,
+      /\b(report|complaint|violation|grievance)\b/i,
+      ubRegex('(റിപ്പോർട്ട്|പരാതി|ലംഘനം)'),
+      /\b(bribery|intimidation|malpractice)\b/i,
+      ubRegex('(കൈക്കൂലി|ഭീഷണി)'),
     ],
     type: 'violation_report',
     endpoint: '/api/report',
@@ -164,7 +172,15 @@ function detectStructuredLookup(
           if (latitude && longitude) {
             boothResults = searchNearestBooths(latitude, longitude, 5, 10);
           } else {
-            boothResults = searchBooths(query, 5);
+            // Extract booth number from query (including Malayalam) to avoid
+            // passing untranslated Malayalam text to the text-based search
+            const boothNumMatch = query.match(/(?:booth|station|polling\s*station)\s*(?:number\s*(?:is\s*)?)?(\ d+)/i)
+              || query.match(/(?:number|no\.?|#)\s*(?:is\s*)?(\d+)/i)
+              || query.match(/(?:ബൂത്ത്|നമ്പർ|പോളിങ്|സ്റ്റേഷൻ)\s*(?:നമ്പർ\s*)?(?:ആണ്\s*)?(\d+)/i)
+              || query.match(/(\d+)\s*(?:ആണ്|ആണ)\s*$/i)
+              || query.trim().match(/^(\d{1,3})$/);
+            const searchTerm = boothNumMatch ? boothNumMatch[1] : query;
+            boothResults = searchBooths(searchTerm, 5);
           }
         }
 
@@ -290,9 +306,12 @@ function tryEngineRoute(
       // Check if query contains / is a booth number → direct lookup
       const numberMatch = query.trim().match(/^(\d{1,3})$/)
         || query.match(/(?:booth|station|polling\s*station)\s*(?:number\s*(?:is\s*)?)?(\d+)/i)
-        || query.match(/(?:number|no\.?|#)\s*(?:is\s*)?(\d+)/i);
+        || query.match(/(?:number|no\.?|#)\s*(?:is\s*)?(\d+)/i)
+        || query.match(/(?:ബൂത്ത്|നമ്പർ|പോളിങ്|സ്റ്റേഷൻ)\s*(?:നമ്പർ\s*)?(?:ആണ്\s*)?(\d+)/i)
+        || query.match(/(\d+)\s*(?:ആണ്|ആണ)\s*$/i);
       if (numberMatch) {
-        const boothResults = searchBooths(query.trim(), 3);
+        // Use extracted number for search, not the full (possibly Malayalam) query
+        const boothResults = searchBooths(numberMatch[1], 3);
         if (boothResults.length > 0) {
           const formatted = boothResults
             .map((b) => formatBoothResult(b, isMl ? 'ml' : 'en'))

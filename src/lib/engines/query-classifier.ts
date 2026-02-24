@@ -15,6 +15,8 @@
  *   out_of_scope      → Civic boundary response
  */
 
+import { ubRegex } from '@/lib/unicode-boundary';
+
 export type QueryCategory =
   | 'booth_query'
   | 'roll_lookup'
@@ -46,10 +48,14 @@ const CATEGORY_PATTERNS: Array<{
     category: 'booth_query',
     weight: 10,
     patterns: [
-      /\b(booth|polling\s*station|ബൂത്ത്|പോളിങ്\s*സ്റ്റേഷൻ)\b/i,
-      /\b(where\s+(do\s+)?i\s+vote|എവിടെ\s*വോട്ട്)\b/i,
-      /\b(find\s+my\s+booth|my\s+booth|എന്റെ\s*ബൂത്ത്)\b/i,
-      /\b(station\s*number|booth\s*number|ബൂത്ത്\s*നമ്പർ)\b/i,
+      /\b(booth|polling\s*station)\b/i,
+      ubRegex('(ബൂത്ത്|പോളിങ്\\s*സ്റ്റേഷൻ)'),
+      /\b(where\s+(do\s+)?i\s+vote)\b/i,
+      ubRegex('(എവിടെ\\s*വോട്ട്)'),
+      /\b(find\s+my\s+booth|my\s+booth)\b/i,
+      ubRegex('(എന്റെ\\s*ബൂത്ത്|എൻറെ\\s*ബൂത്ത്)'),
+      /\b(station\s*number|booth\s*number)\b/i,
+      ubRegex('(ബൂത്ത്\\s*നമ്പർ|പോളിങ്\\s*നമ്പർ)'),
       /\b(nearest\s+polling|closest\s+booth)\b/i,
       /\b(booth\s+(near|in|at)|polling\s+station\s+(near|in|at))\b/i,
       /\b(lac\s*\d+|constituency\s+map)\b/i,
@@ -57,9 +63,10 @@ const CATEGORY_PATTERNS: Array<{
     ],
     subIntentPatterns: [
       { pattern: /\b(number|#|station\s*\d+|booth\s*\d+)\b/i, subIntent: 'by_number' },
+      { pattern: ubRegex('(നമ്പർ\\s*\\d+|ബൂത്ത്\\s*\\d+)'), subIntent: 'by_number' },
       { pattern: /^\s*\d{1,3}\s*$/, subIntent: 'by_number' },
       { pattern: /\b(near|close|nearby|area|locality)\b/i, subIntent: 'by_locality' },
-      { pattern: /\b(constituency|lac|നിയ[ോ]ജക)/i, subIntent: 'constituency_map' },
+      { pattern: ubRegex('(constituency|lac|നിയ[ോ]ജക)'), subIntent: 'constituency_map' },
     ],
   },
   {
@@ -67,9 +74,10 @@ const CATEGORY_PATTERNS: Array<{
     weight: 10,
     patterns: [
       /\b(registration|registered|enrolled|voter\s*list|am\s+i\s+registered)\b/i,
-      /\b(രജിസ്ട്രേഷൻ|രജിസ്റ്റർ|വോട്ടർ\s*ലിസ്റ്റ്)\b/i,
+      ubRegex('(രജിസ്ട്രേഷൻ|രജിസ്റ്റർ|വോട്ടർ\\s*ലിസ്റ്റ്)'),
       /\b(check.*(epic|voter\s*id)|epic\s*check|voter\s*id\s*(check|status))\b/i,
-      /\b(എപിക്\s*ചെക്ക്|is\s+my\s+name)\b/i,
+      ubRegex('(എപിക്\\s*ചെക്ക്)'),
+      /\b(is\s+my\s+name)\b/i,
       /\b(electoral\s*roll|voter\s*roll|name\s+in\s+list)\b/i,
       /\b(epic\s*number|voter\s*id\s*number)\b/i,
     ],
@@ -85,7 +93,8 @@ const CATEGORY_PATTERNS: Array<{
     patterns: [
       /\b(form[\s-]*(6|6a|7|8|8a|12c|m))\b/i,
       /\b(new\s+voter|first\s+time\s+voter|register\s+as\s+voter)\b/i,
-      /\b(പുതിയ\s*വോട്ടർ|ആദ്യമായി\s*വോട്ട്)\b/i,
+      ubRegex('(പുതിയ\\s*വോട്ടർ|ആദ്യമായി\\s*വോട്ട്)'),
+      ubRegex('(രജിസ്റ്റർ\\s*ചെയ്യ|ഫോം\\s*\\d+)'),
       /\b(name\s+correction|address\s+(change|correction|update))\b/i,
       /\b(shift(ed)?\s+(house|residence|address))\b/i,
       /\b(moved\s+(house|city|state)|relocated)\b/i,
@@ -95,6 +104,7 @@ const CATEGORY_PATTERNS: Array<{
       /\b(objection|deletion\s+request)\b/i,
       /\b(pwd\s+marking|disability\s+marking)\b/i,
       /\b(document|documents\s+required|what\s+papers)\b/i,
+      ubRegex('(രേഖകൾ|ഡോക്യുമെന്റ്|അപേക്ഷ)'),
       /\b(migrant\s+voter)\b/i,
     ],
     subIntentPatterns: [
@@ -124,7 +134,7 @@ const CATEGORY_PATTERNS: Array<{
       /\b(mock\s+poll|last\s+voter\s+rule)\b/i,
       /\b(polling\s+slip|voter\s+slip)\b/i,
       /\b(allowed\s+id|accepted\s+id|valid\s+id)\b/i,
-      /\b(എങ്ങനെ\s*വോട്ട്\s*ചെയ്യും|വോട്ടിങ്\s*നിയമങ്ങൾ)\b/i,
+      ubRegex('(എങ്ങനെ\\s*വോട്ട്\\s*ചെയ്യും|വോട്ടിങ്\\s*നിയമങ്ങൾ|ഐഡി\\s*പ്രൂഫ്|വോട്ടിങ്\\s*സമയം)'),
       /\b(what\s+(can|should)\s+i\s+(bring|carry)\s+to\s+(the\s+)?poll)\b/i,
     ],
     subIntentPatterns: [
@@ -150,7 +160,7 @@ const CATEGORY_PATTERNS: Array<{
       /\b(paid\s+news|fake\s+news)\b/i,
       /\b(hoarding|banner|poster.*illegal)\b/i,
       /\b(weapon|firearm|arms\s+near\s+poll)\b/i,
-      /\b(പരാതി|ലംഘനം|റിപ്പോർട്ട്\s*ചെയ്യ)\b/i,
+      ubRegex('(പരാതി|ലംഘനം|റിപ്പോർട്ട്\\s*ചെയ്യ|കൈക്കൂലി|ഭീഷണി)'),
       /\b(how\s+to\s+report|where\s+to\s+complain)\b/i,
       /\b(1950|helpline|voter\s+helpline)\b/i,
     ],
@@ -175,7 +185,7 @@ const CATEGORY_PATTERNS: Array<{
       /\b(2026\s+election|kerala\s+election\s+2026)\b/i,
       /\b(constituency|constituencies|kottayam\s+lac)\b/i,
       /\b(deadline|last\s+date\s+for\s+(registration|nomination))\b/i,
-      /\b(തിരഞ്ഞെടുപ്പ്\s*തീയതി|എപ്പോൾ\s*തിരഞ്ഞെടുപ്പ്)\b/i,
+      ubRegex('(തിരഞ്ഞെടുപ്പ്\\s*തീയതി|എപ്പോൾ\\s*തിരഞ്ഞെടുപ്പ്|തിരഞ്ഞെടുപ്പ്\\s*ഷെഡ്യൂൾ)'),
     ],
     subIntentPatterns: [
       { pattern: /\b(poll|voting|election)\s*date\b/i, subIntent: 'poll_date' },
@@ -223,7 +233,7 @@ const CATEGORY_PATTERNS: Array<{
       /\b(rig\s+(the\s+)?election|tamper|fake\s+(vote|ballot|id))\b/i,
       /\b(die|death\s+to|go\s+die|blow\s+up|set\s+fire)\b/i,
       // Malayalam non-election
-      /\b(കാലാവസ്ഥ|സിനിമ|പാട്ട്|കളി|തമാശ|ആരോഗ്യം)\b/i,
+      ubRegex('(കാലാവസ്ഥ|സിനിമ|പാട്ട്|കളി|തമാശ|ആരോഗ്യം)'),
     ],
   },
 ];
@@ -254,7 +264,8 @@ export function classifyQuery(query: string): ClassificationResult {
   const pincodeMatch = query.match(/\b(\d{6})\b/);
   if (pincodeMatch) extractedParams.pincode = pincodeMatch[1];
 
-  const boothNumMatch = query.match(/\b(?:booth|station)\s*#?\s*(\d{1,4})\b/i);
+  const boothNumMatch = query.match(/\b(?:booth|station)\s*#?\s*(\d{1,4})\b/i)
+    || query.match(/(?:ബൂത്ത്|നമ്പർ|പോളിങ്)\s*(\d{1,4})/i);
   if (boothNumMatch) extractedParams.boothNumber = boothNumMatch[1];
 
   const formMatch = query.match(/\b(?:form)\s*[-]?\s*(6a?|7|8a?|12c|m)\b/i);

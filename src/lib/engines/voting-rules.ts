@@ -235,16 +235,16 @@ export function getVotingRulesResponse(subIntent?: string, query?: string, local
   // Auto-detect sub-intent from query if not provided
   if (!subIntent && query) {
     const lq = query.toLowerCase();
-    if (/\b(id\s*(proof|document)|photo\s*id|accepted|allowed|valid)\s*id|what\s+(id|document)\b/i.test(lq)) subIntent = 'id_documents';
-    else if (/\b(time|timing|when|hour|open|close)\b/i.test(lq)) subIntent = 'poll_timing';
-    else if (/\b(evm|vvpat|machine)\b/i.test(lq)) subIntent = 'evm_vvpat';
-    else if (/\b(prohibit|ban|not\s+allowed|carry|bring|can\s+i)\b/i.test(lq)) subIntent = 'prohibited';
-    else if (/\b(pwd|disab|elderly|senior|wheelchair|braille|companion|home\s+voting)\b/i.test(lq)) subIntent = 'pwd_facilities';
-    else if (/\b(step|process|how\s+to\s+vote)\b/i.test(lq)) subIntent = 'voting_process';
+    if (/\b(id\s*(proof|document)|photo\s*id|accepted|allowed|valid)\s*id|what\s+(id|document)\b/i.test(lq) || /ഐഡി\s*പ്രൂഫ്|രേഖകൾ/i.test(lq)) subIntent = 'id_documents';
+    else if (/\b(time|timing|when|hour|open|close)\b/i.test(lq) || /സമയം|എപ്പോൾ/i.test(lq)) subIntent = 'poll_timing';
+    else if (/\b(evm|vvpat|machine)\b/i.test(lq) || /മെഷീൻ|വോട്ടിങ്\s*മെഷീൻ/i.test(lq)) subIntent = 'evm_vvpat';
+    else if (/\b(prohibit|ban|not\s+allowed|carry|bring|can\s+i)\b/i.test(lq) || /നിരോധിത|കൊണ്ടുവരാൻ/i.test(lq)) subIntent = 'prohibited';
+    else if (/\b(pwd|disab|elderly|senior|wheelchair|braille|companion|home\s+voting)\b/i.test(lq) || /വികലാങ്കർ|വയോധികർ/i.test(lq)) subIntent = 'pwd_facilities';
+    else if (/\b(step|process|how\s+to\s+vote)\b/i.test(lq) || /എങ്ങനെ\s*വോട്ട്|പ്രക്രിയ/i.test(lq)) subIntent = 'voting_process';
     else if (/\b(tender|impersonat)\b/i.test(lq)) subIntent = 'tender_vote';
     else if (/\b(silence|campaign\s+ban)\b/i.test(lq)) subIntent = 'silence_period';
-    else if (/\b(slip|polling\s+slip)\b/i.test(lq)) subIntent = 'polling_slip';
-    else if (/\b(ink|indelible)\b/i.test(lq)) subIntent = 'indelible_ink';
+    else if (/\b(slip|polling\s+slip)\b/i.test(lq) || /സ്ലിപ്പ്/i.test(lq)) subIntent = 'polling_slip';
+    else if (/\b(ink|indelible)\b/i.test(lq) || /മഷി/i.test(lq)) subIntent = 'indelible_ink';
   }
 
   const handlers: Record<string, (l: string) => string> = {

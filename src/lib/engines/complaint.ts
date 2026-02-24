@@ -176,11 +176,11 @@ export function getComplaintResponse(subIntent?: string, query?: string, locale:
   // Auto-detect sub-intent from query
   if (!subIntent && query) {
     const lq = query.toLowerCase();
-    if (/\b(cvigil|c-vigil|app|how\s+to\s+(file|report|submit))\b/i.test(lq)) subIntent = 'cvigil_steps';
-    else if (/\b(type|categor|kind\s+of\s+violation|what\s+can\s+i\s+report)\b/i.test(lq)) subIntent = 'violation_types';
-    else if (/\b(offline|without\s+app|phone|call|alternative|other\s+way)\b/i.test(lq)) subIntent = 'offline_complaint';
-    else if (/\b(track|status|follow\s*up|my\s+complaint)\b/i.test(lq)) subIntent = 'track_complaint';
-    else if (/\b(sla|time|how\s+long|response\s+time|how\s+fast)\b/i.test(lq)) subIntent = 'response_time';
+    if (/\b(cvigil|c-vigil|app|how\s+to\s+(file|report|submit))\b/i.test(lq) || /എങ്ങനെ\s*റിപ്പോർട്ട്|പരാതി\s*നൽക/i.test(lq)) subIntent = 'cvigil_steps';
+    else if (/\b(type|categor|kind\s+of\s+violation|what\s+can\s+i\s+report)\b/i.test(lq) || /ലംഘന\s*വിഭാഗ/i.test(lq)) subIntent = 'violation_types';
+    else if (/\b(offline|without\s+app|phone|call|alternative|other\s+way)\b/i.test(lq) || /ഓഫ്‌ലൈൻ/i.test(lq)) subIntent = 'offline_complaint';
+    else if (/\b(track|status|follow\s*up|my\s+complaint)\b/i.test(lq) || /സ്റ്റാറ്റസ്|ട്രാക്ക്/i.test(lq)) subIntent = 'track_complaint';
+    else if (/\b(sla|time|how\s+long|response\s+time|how\s+fast)\b/i.test(lq) || /എത്ര\s*സമയം/i.test(lq)) subIntent = 'response_time';
   }
 
   const handlers: Record<string, (l: string) => string> = {

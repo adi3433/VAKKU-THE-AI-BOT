@@ -222,15 +222,15 @@ export function getTimelineResponse(subIntent?: string, query?: string, locale: 
   // Auto-detect sub-intent from query
   if (!subIntent && query) {
     const lq = query.toLowerCase();
-    if (/\b(poll|voting|election)\s*date\b/i.test(lq)) subIntent = 'poll_date';
-    else if (/\b(nomination)\b/i.test(lq)) subIntent = 'nomination_date';
+    if (/\b(poll|voting|election)\s*date\b/i.test(lq) || /വോട്ടെടുപ്പ്\s*തീയതി/i.test(lq)) subIntent = 'poll_date';
+    else if (/\b(nomination)\b/i.test(lq) || /നാമനിർദ്ദേശ/i.test(lq)) subIntent = 'nomination_date';
     else if (/\b(scrutiny)\b/i.test(lq)) subIntent = 'scrutiny_date';
-    else if (/\b(withdrawal)\b/i.test(lq)) subIntent = 'withdrawal_date';
-    else if (/\b(counting|result)\b/i.test(lq)) subIntent = 'counting_date';
-    else if (/\b(mcc|model\s*code|code\s*of\s*conduct)\b/i.test(lq)) subIntent = 'mcc';
-    else if (/\b(constituency|constituencies|lac)\b/i.test(lq)) subIntent = 'constituencies';
-    else if (/\b(deadline|last\s*date)\b/i.test(lq)) subIntent = 'deadlines';
-    else if (/\b(schedule|timeline|key\s*date|all\s*date)\b/i.test(lq)) subIntent = 'all_dates';
+    else if (/\b(withdrawal)\b/i.test(lq) || /പിൻമാറ്റം/i.test(lq)) subIntent = 'withdrawal_date';
+    else if (/\b(counting|result)\b/i.test(lq) || /ഫലം|എണ്ണ/i.test(lq)) subIntent = 'counting_date';
+    else if (/\b(mcc|model\s*code|code\s*of\s*conduct)\b/i.test(lq) || /പെരുമാറ്റ\s*ചട്ടം/i.test(lq)) subIntent = 'mcc';
+    else if (/\b(constituency|constituencies|lac)\b/i.test(lq) || /മണ്ഡലം|നിയോജകമണ്ഡലം/i.test(lq)) subIntent = 'constituencies';
+    else if (/\b(deadline|last\s*date)\b/i.test(lq) || /അവസാന\s*തീയതി/i.test(lq)) subIntent = 'deadlines';
+    else if (/\b(schedule|timeline|key\s*date|all\s*date)\b/i.test(lq) || /ഷെഡ്യൂൾ|തീയതി/i.test(lq)) subIntent = 'all_dates';
   }
 
   const handlers: Record<string, (l: string) => string> = {

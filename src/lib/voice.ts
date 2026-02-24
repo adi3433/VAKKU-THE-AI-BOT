@@ -16,8 +16,12 @@ const FILLER_PATTERNS_EN = [
   /\b(basically|actually|literally)\b(?=.*\b(basically|actually|literally)\b)/gi,
 ];
 
+// Unicode-aware boundary for Malayalam (JS \b only matches ASCII word chars)
+const ML_B_LEFT = '(?:^|(?<=[\\s.,;:!?()\\u200B-\\u200D\\u00A0—\\-]))';
+const ML_B_RIGHT = '(?=[\\s.,;:!?()\\u200B-\\u200D\\u00A0—\\-]|$)';
+
 const FILLER_PATTERNS_ML = [
-  /\b(അത്|പിന്നെ|അതായത്)\b(?=.*\b(അത്|പിന്നെ|അതായത്)\b)/g,
+  new RegExp(`${ML_B_LEFT}(അത്|പിന്നെ|അതായത്)${ML_B_RIGHT}(?=.*${ML_B_LEFT}(അത്|പിന്നെ|അതായത്)${ML_B_RIGHT})`, 'g'),
 ];
 
 function removeFillers(text: string, language: string): string {

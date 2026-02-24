@@ -110,10 +110,12 @@ export function searchBooths(query: string, maxResults = 5): BoothRecord[] {
   const booths = getAllBooths();
   const lowerQuery = query.toLowerCase().trim();
 
-  // Check for station number query (e.g., "booth 5", "station 42", "booth number is 133")
-  const numberMatch = lowerQuery.match(/(?:booth|station|polling\s*station)\s*(?:number\s*(?:is\s*)?)?(\d+)/i)
+  // Check for station number query (e.g., "booth 5", "station 42", "booth number is 133", "ബൂത്ത് 133")
+  const numberMatch = lowerQuery.match(/(?:booth|station|polling\s*station)\s*(?:number\s*(?:is\s*)?)?(\ d+)/i)
     || lowerQuery.match(/(?:number|no\.?|#)\s*(?:is\s*)?(\d+)/i)
-    || lowerQuery.match(/^(\d{1,3})$/);
+    || lowerQuery.match(/^(\d{1,3})$/)
+    || query.match(/(?:ബൂത്ത്|നമ്പർ|പോളിംഗ്|പോളിങ്|സ്റ്റേഷൻ)\s*(?:നമ്പർ\s*)?(?:ആണ്\s*)?(\d+)/i)
+    || query.match(/(\d+)\s*(?:ആണ്|ആണ)\s*$/i);
   if (numberMatch) {
     const num = parseInt(numberMatch[1], 10);
     const exact = booths.filter((b) => b.stationNumber === num);

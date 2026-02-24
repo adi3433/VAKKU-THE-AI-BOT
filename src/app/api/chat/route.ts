@@ -308,10 +308,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-save conversation to history
+    // NOTE: Only append the NEW user + assistant messages. The conversationHistory
+    // from the client already contains all prior messages. Avoid duplicating
+    // the user message which is already in conversationHistory.
     try {
+      const priorMessages = conversationHistory ?? [];
+      // Check if the last message in history already IS this user message (to prevent duplicates)
+      const lastPrior = priorMessages[priorMessages.length - 1];
+      const isAlreadyIncluded = lastPrior?.role === 'user'
+        && lastPrior.content?.trim() === message.trim();
+
       const allMessages = [
-        ...(conversationHistory ?? []),
-        { id: uuid(), role: 'user' as const, content: message.trim(), locale: routerResult.resolvedLocale, timestamp: new Date().toISOString() },
+        ...priorMessages,
+        // Only add user message if it wasn't already the last item in history
+        ...(isAlreadyIncluded ? [] : [{ id: uuid(), role: 'user' as const, content: message.trim(), locale: routerResult.resolvedLocale, timestamp: new Date().toISOString() }]),
         { id: response.messageId, role: 'assistant' as const, content: response.text, locale: routerResult.resolvedLocale, timestamp: response.timestamp },
       ];
       await saveConversation(

@@ -25,6 +25,12 @@ interface GenerationResult {
  */
 const REASONING_INDICATOR = /\b(?:let me|I need to|I should|I'll|I can see|I must|I have to|I want to|I can't|the user(?:'s| is| has| asked| didn't| previously| tried| might| may| wants)|from the (?:context|source|provided|conversation|data)|check (?:if|the|for|whether|any)|looking at|wait,|hmm,?|first,?\s*I|also,?\s*(?:the|I)|but (?:the instructions?|wait|since|I|to be)|however,?\s*(?:the|I)|now (?:that|I|let)|so (?:the (?:response|answer)|I (?:should|need|can|must)|maybe|it)|this (?:means|suggests|is (?:a |the ))|before I|maybe I|alternatively|considering|my (?:approach|plan|reasoning)|the (?:instructions?|format|rules?) (?:says?|is|are|requires?)|to be safe|the (?:response|answer|output) (?:should|must|needs?)|I (?:don't|do not) (?:need|want|have)|since (?:the|they|we)|the (?:relevant|key|important) (?:details?|info|source)|no code-switching|the confidence)\b/i;
 
+/**
+ * Malayalam reasoning indicators — matches common LLM reasoning phrases in Malayalam.
+ * These appear when the model leaks chain-of-thought in Malayalam.
+ */
+const ML_REASONING_INDICATOR = /(?:ഞാൻ\s*(?:പരിശോധിക്ക|നോക്ക|ചെക്ക്\s*ചെയ്യ|മനസ്സിലാക്ക|ഉത്തരം\s*നൽക)|ആദ്യം\s*ഞാൻ|ഉപയോക്താവ്\s*(?:ചോദിക്കുന്നു|ചോദിച്ച|ആവശ്യപ്പെട്ട)|ഉറവിടങ്ങൾ\s*(?:പരിശോധിക്ക|നോക്ക|പ്രകാരം)|ഇത്\s*(?:അർത്ഥമാക്കുന്നത്|സൂചിപ്പിക്കുന്നത്)|ചോദ്യം\s*(?:മനസ്സിലാക്ക|വിശകലനം)|ഉത്തരം\s*(?:തയ്യാറാക്ക|നൽക|എഴുത)|സോഴ്\u200Cസ്\s*(?:പ്രകാരം|അനുസരിച്ച്)|വിവരങ്ങൾ\s*(?:പരിശോധിക്ക|ശേഖരിക്ക))/i;
+
 function stripUntaggedReasoning(text: string): string {
   const trimmed = text.trim();
 
@@ -37,7 +43,7 @@ function stripUntaggedReasoning(text: string): string {
   const paragraphs = trimmed.split(/\n\n+/);
   if (paragraphs.length <= 1) {
     // Single paragraph: check if it's reasoning
-    if (REASONING_INDICATOR.test(trimmed) && trimmed.length > 200) {
+    if ((REASONING_INDICATOR.test(trimmed) || ML_REASONING_INDICATOR.test(trimmed)) && trimmed.length > 200) {
       return ''; // All reasoning, no answer — will trigger fallback
     }
     return trimmed;
@@ -49,7 +55,7 @@ function stripUntaggedReasoning(text: string): string {
     const para = paragraphs[i].trim();
     if (!para) continue;
 
-    const isReasoning = REASONING_INDICATOR.test(para);
+    const isReasoning = REASONING_INDICATOR.test(para) || ML_REASONING_INDICATOR.test(para);
     const isFormatted = /^(?:\*\*|[-•●]\s|📍|📞|✅|❌|➡️|✓|#{1,3}\s|\d+\.\s\*\*)/.test(para);
 
     // Found a non-reasoning paragraph that looks like actual answer content
@@ -58,7 +64,10 @@ function stripUntaggedReasoning(text: string): string {
       break;
     }
     // Non-reasoning, non-formatted but substantial text (not meta-commentary)
-    if (!isReasoning && para.length > 30) {
+    // Malayalam text is denser per character than English, so use a lower threshold
+    // for text that contains Malayalam characters
+    const minLength = /[\u0D00-\u0D7F]/.test(para) ? 15 : 30;
+    if (!isReasoning && para.length > minLength) {
       answerStartIdx = i;
       break;
     }
@@ -75,7 +84,7 @@ function stripUntaggedReasoning(text: string): string {
   // to produce a clean answer — return empty to trigger fallback
   if (answerStartIdx === -1 && paragraphs.length >= 3) {
     const allReasoning = paragraphs.every(
-      (p) => !p.trim() || REASONING_INDICATOR.test(p.trim())
+      (p) => !p.trim() || REASONING_INDICATOR.test(p.trim()) || ML_REASONING_INDICATOR.test(p.trim())
     );
     if (allReasoning) return '';
   }
