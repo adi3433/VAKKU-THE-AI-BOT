@@ -247,7 +247,7 @@ export default function ChatPage() {
             </div>
           ) : (
             /* ── Messages ── */
-            <MessageList messages={messages} isTyping={isTyping} />
+            <MessageList messages={messages} isTyping={isTyping} onAction={send} />
           )}
 
           {/* ── Input Bar ── */}

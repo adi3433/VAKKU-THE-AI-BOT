@@ -114,6 +114,37 @@ function getPersistedSidebar(): boolean {
   return stored !== null ? stored === 'true' : true;
 }
 
+const DEFAULT_QUICK_ACTIONS: ActionItem[] = [
+  {
+    id: 'check_epic',
+    label: 'Check Registration',
+    labelMl: 'രജിസ്ട്രേഷൻ പരിശോധിക്കുക',
+    icon: 'IdentificationIcon',
+    action: 'check_epic',
+  },
+  {
+    id: 'locate_booth',
+    label: 'Find Polling Booth',
+    labelMl: 'പോളിംഗ് ബൂത്ത് കണ്ടെത്തുക',
+    icon: 'MapPinIcon',
+    action: 'locate_booth',
+  },
+  {
+    id: 'report_violation',
+    label: 'Report Violation',
+    labelMl: 'ലംഘനം റിപ്പോർട്ട് ചെയ്യുക',
+    icon: 'ExclamationTriangleIcon',
+    action: 'report_violation',
+  },
+  {
+    id: 'faq',
+    label: 'FAQ',
+    labelMl: 'പൊതു ചോദ്യങ്ങൾ',
+    icon: 'QuestionMarkCircleIcon',
+    action: 'faq',
+  },
+];
+
 export const useVaakkuStore = create<VaakkuState>((set) => ({
   // Locale
   locale: 'en',
@@ -122,7 +153,7 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
   // Session
   sessionId: uuid(),
   userId: typeof window !== 'undefined' ? getPersistentUserId() : uuid(),
-  resetSession: () => set({ sessionId: uuid(), messages: [], activeConversationId: null }),
+  resetSession: () => set({ sessionId: uuid(), messages: [], activeConversationId: null, quickActions: DEFAULT_QUICK_ACTIONS }),
 
   // Chat
   messages: [],
@@ -142,36 +173,7 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
   setTyping: (isTyping) => set({ isTyping }),
 
   // Quick Actions
-  quickActions: [
-    {
-      id: 'check_epic',
-      label: 'Check Registration',
-      labelMl: 'രജിസ്ട്രേഷൻ പരിശോധിക്കുക',
-      icon: 'IdentificationIcon',
-      action: 'check_epic',
-    },
-    {
-      id: 'locate_booth',
-      label: 'Find Polling Booth',
-      labelMl: 'പോളിംഗ് ബൂത്ത് കണ്ടെത്തുക',
-      icon: 'MapPinIcon',
-      action: 'locate_booth',
-    },
-    {
-      id: 'report_violation',
-      label: 'Report Violation',
-      labelMl: 'ലംഘനം റിപ്പോർട്ട് ചെയ്യുക',
-      icon: 'ExclamationTriangleIcon',
-      action: 'report_violation',
-    },
-    {
-      id: 'faq',
-      label: 'FAQ',
-      labelMl: 'പൊതു ചോദ്യങ്ങൾ',
-      icon: 'QuestionMarkCircleIcon',
-      action: 'faq',
-    },
-  ],
+  quickActions: DEFAULT_QUICK_ACTIONS,
   setQuickActions: (quickActions) => set({ quickActions }),
 
   // Chat History Sidebar
@@ -217,7 +219,7 @@ export const useVaakkuStore = create<VaakkuState>((set) => ({
     if (typeof window !== 'undefined') localStorage.setItem('vaakku_sidebarOpen', String(next));
     return { sidebarOpen: next };
   }),
-  darkMode: typeof window !== 'undefined' ? getPersistedDarkMode() : false,
+  darkMode: false,
   setDarkMode: (darkMode) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('vaakku_darkMode', String(darkMode));

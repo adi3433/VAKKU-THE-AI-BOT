@@ -55,7 +55,7 @@ const features = [
     labelMl: 'പോളിംഗ് ബൂത്ത് ലൊക്കേറ്റർ',
     descEn: 'Find your polling booth on a map with directions.',
     descMl: 'മാപ്പിൽ നിങ്ങളുടെ പോളിംഗ് ബൂത്ത് കണ്ടെത്തുക.',
-    color: 'accent',
+    color: 'primary',
   },
   {
     icon: IdentificationIcon,
@@ -64,7 +64,7 @@ const features = [
     labelMl: 'രജിസ്ട്രേഷൻ പരിശോധിക്കുക',
     descEn: 'Verify your voter registration status instantly.',
     descMl: 'നിങ്ങളുടെ വോട്ടർ രജിസ്ട്രേഷൻ സ്ഥിതി ഉടൻ പരിശോധിക്കുക.',
-    color: 'success',
+    color: 'primary',
   },
   {
     icon: ExclamationTriangleIcon,
@@ -73,7 +73,7 @@ const features = [
     labelMl: 'ലംഘനം റിപ്പോർട്ട് ചെയ്യുക',
     descEn: 'Report election violations with photo/video evidence.',
     descMl: 'ഫോട്ടോ/വീഡിയോ തെളിവുകൾ ഉപയോഗിച്ച് തിരഞ്ഞെടുപ്പ് ലംഘനങ്ങൾ റിപ്പോർട്ട് ചെയ്യുക.',
-    color: 'warning',
+    color: 'primary',
   },
   {
     icon: QuestionMarkCircleIcon,
@@ -96,7 +96,7 @@ const features = [
 ];
 
 const colorMap: Record<string, string> = {
-  primary: 'bg-[var(--color-primary-50)] text-[var(--color-primary-600)] border-[var(--color-primary-100)]',
+  primary: 'bg-[var(--color-primary-500)] text-white border-[var(--color-primary-600)]',
   accent: 'bg-[var(--color-accent-50)] text-[var(--color-accent-700)] border-[var(--color-accent-100)]',
   success: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
   warning: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800',
@@ -119,7 +119,7 @@ export default function Home() {
             animate="visible"
           >
             <motion.div variants={fadeUp}>
-              <span className="inline-block rounded-full bg-[var(--color-primary-50)] px-4 py-1.5 text-xs font-medium text-[var(--color-primary-600)] border border-[var(--color-primary-100)]">
+              <span className="inline-block rounded-full bg-[var(--color-primary-500)]/15 px-4 py-1.5 text-xs font-semibold text-[var(--badge-text)] border border-[var(--color-primary-500)]/20">
                 SVEEP Kottayam District
               </span>
             </motion.div>
@@ -173,22 +173,27 @@ export default function Home() {
               const Icon = feature.icon;
               return (
                 <motion.div key={feature.href} variants={fadeUp}>
-                  <Link
-                    href={feature.href}
-                    className="group block rounded-2xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-6 shadow-sm transition-all hover:shadow-md hover:border-[var(--color-primary-200)]"
+                  <motion.div
+                    whileHover={{ scale: 1.04, y: -4 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   >
-                    <div
-                      className={`inline-flex rounded-xl border p-3 ${colorMap[feature.color]}`}
+                    <Link
+                      href={feature.href}
+                      className="group block rounded-2xl border border-[var(--color-neutral-100)] bg-[var(--surface-primary)] p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:shadow-[var(--color-primary-500)]/10 hover:border-[var(--color-primary-300)]"
                     >
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <h3 className={`mt-4 text-base font-semibold text-[var(--color-neutral-800)] ${isMl ? 'font-ml' : ''}`}>
-                      {isMl ? feature.labelMl : feature.labelEn}
-                    </h3>
-                    <p className={`mt-1.5 text-sm text-[var(--color-neutral-500)] leading-relaxed ${isMl ? 'font-ml' : ''}`}>
-                      {isMl ? feature.descMl : feature.descEn}
-                    </p>
-                  </Link>
+                      <div
+                        className={`inline-flex rounded-xl p-3 transition-transform duration-300 group-hover:scale-110 ${colorMap[feature.color]}`}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className={`mt-4 text-base font-semibold text-[var(--color-neutral-800)] ${isMl ? 'font-ml' : ''}`}>
+                        {isMl ? feature.labelMl : feature.labelEn}
+                      </h3>
+                      <p className={`mt-1.5 text-sm text-[var(--color-neutral-500)] leading-relaxed ${isMl ? 'font-ml' : ''}`}>
+                        {isMl ? feature.descMl : feature.descEn}
+                      </p>
+                    </Link>
+                  </motion.div>
                 </motion.div>
               );
             })}

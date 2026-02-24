@@ -25,6 +25,7 @@ interface MessageListProps {
   messages: ChatMessage[];
   isTyping: boolean;
   onRegenerate?: (messageId: string) => void;
+  onAction?: (message: string) => void;
 }
 
 const bubbleVariants = {
@@ -37,7 +38,7 @@ const bubbleVariants = {
   },
 };
 
-export function MessageList({ messages, isTyping, onRegenerate }: MessageListProps) {
+export function MessageList({ messages, isTyping, onRegenerate, onAction }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const { locale } = useLocale();
 
@@ -55,6 +56,7 @@ export function MessageList({ messages, isTyping, onRegenerate }: MessageListPro
             locale={locale}
             isLast={idx === messages.length - 1 && msg.role === 'assistant'}
             onRegenerate={onRegenerate}
+            onAction={onAction}
           />
         ))}
 
@@ -111,11 +113,13 @@ function MessageBubble({
   locale,
   isLast,
   onRegenerate,
+  onAction,
 }: {
   message: ChatMessage;
   locale: string;
   isLast: boolean;
   onRegenerate?: (messageId: string) => void;
+  onAction?: (message: string) => void;
 }) {
   const isUser = message.role === 'user';
   const isMl = locale === 'ml';
@@ -148,11 +152,10 @@ function MessageBubble({
     >
       {/* Avatar */}
       <div
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-          isUser
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${isUser
             ? 'bg-[var(--color-accent-500)]/10'
             : 'bg-[var(--color-primary-500)]/10'
-        }`}
+          }`}
       >
         {isUser ? (
           <UserCircleIcon className="h-4 w-4 text-[var(--color-accent-600)]" />
@@ -288,7 +291,8 @@ function MessageBubble({
                 key={action.id}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                className="rounded-lg border border-[var(--color-primary-500)]/20 bg-[var(--color-primary-500)]/5 px-3 py-1.5 text-xs font-medium text-[var(--color-primary-600)] transition-colors hover:bg-[var(--color-primary-500)]/10"
+                onClick={() => onAction?.(locale === 'ml' && action.labelMl ? action.labelMl : action.label)}
+                className="rounded-lg border border-[var(--color-primary-500)]/20 bg-[var(--color-primary-500)]/5 px-3 py-1.5 text-xs font-medium text-[var(--color-primary-600)] transition-colors hover:bg-[var(--color-primary-500)]/10 cursor-pointer"
               >
                 {locale === 'ml' && action.labelMl ? action.labelMl : action.label}
               </motion.button>

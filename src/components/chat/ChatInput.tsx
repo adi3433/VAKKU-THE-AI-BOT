@@ -89,7 +89,6 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
           flex items-end gap-2 rounded-2xl border bg-[var(--surface-primary)] p-2 shadow-sm
           transition-all duration-200
           ${disabled ? 'opacity-60' : ''}
-          focus-within:shadow-[var(--shadow-glow)]
           border-[var(--border-primary)]
         `}
       >
@@ -147,7 +146,7 @@ export function ChatInput({ onSend, disabled = false }: ChatInputProps) {
           className={`
             min-h-[36px] flex-1 resize-none bg-transparent px-2 py-1.5
             text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)]
-            outline-none
+            outline-none focus:ring-0 focus-visible:outline-none
             ${locale === 'ml' ? 'font-ml' : ''}
           `}
           aria-label="Chat message input"
