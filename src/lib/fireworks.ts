@@ -28,7 +28,7 @@ export function getConfig() {
 
     // Budgets & limits
     maxContextTokens: parseInt(process.env.MAX_CONTEXT_TOKENS || '6000', 10),
-    maxGenerationTokens: parseInt(process.env.MAX_GENERATION_TOKENS || '900', 10),
+    maxGenerationTokens: parseInt(process.env.MAX_GENERATION_TOKENS || '1800', 10),
     cacheTtlSeconds: parseInt(process.env.CACHE_TTL_SECONDS || '86400', 10),
     memoryRetentionDays: parseInt(process.env.MEMORY_RETENTION_DAYS || '90', 10),
     modelTimeoutMs: 12_000, // 12s timeout for model calls
