@@ -21,7 +21,6 @@ export function useChat() {
     setTyping,
     sessionId,
     locale,
-    setQuickActions,
     userLatitude,
     userLongitude,
   } = useVaakkuStore();
@@ -86,7 +85,7 @@ export function useChat() {
         setTyping(false);
       }
     },
-    [messages, addMessage, setTyping, sessionId, locale, setQuickActions, userLatitude, userLongitude]
+    [messages, addMessage, setTyping, sessionId, locale, userLatitude, userLongitude]
   );
 
   return {

@@ -99,14 +99,6 @@ function getPersistentUserId(): string {
   return newId;
 }
 
-// Retrieve persisted dark mode preference
-function getPersistedDarkMode(): boolean {
-  if (typeof window === 'undefined') return false;
-  const stored = localStorage.getItem('vaakku_darkMode');
-  if (stored !== null) return stored === 'true';
-  return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
-}
-
 // Retrieve persisted sidebar state
 function getPersistedSidebar(): boolean {
   if (typeof window === 'undefined') return true;

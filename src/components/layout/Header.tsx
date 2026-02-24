@@ -3,7 +3,7 @@
  */
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -20,7 +20,13 @@ export function Header() {
   const toggleDarkMode = useVaakkuStore((s) => s.toggleDarkMode);
   const setDarkMode = useVaakkuStore((s) => s.setDarkMode);
   const darkMode = useVaakkuStore((s) => s.darkMode);
-  const [mounted, setMounted] = useState(false);
+
+  // Hydration-safe mounted check using useSyncExternalStore
+  const mounted = useSyncExternalStore(
+    () => () => {},          // no-op subscribe (client never changes)
+    () => true,              // client snapshot: mounted
+    () => false              // server snapshot: not mounted
+  );
 
   // Sync persisted dark mode preference after hydration
   useEffect(() => {
@@ -30,7 +36,6 @@ export function Header() {
     } else if (window.matchMedia?.('(prefers-color-scheme: dark)')?.matches) {
       setDarkMode(true);
     }
-    setMounted(true);
   }, [setDarkMode]);
 
   const isDark = mounted && darkMode;
