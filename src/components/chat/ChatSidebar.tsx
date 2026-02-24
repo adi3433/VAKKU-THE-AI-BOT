@@ -17,6 +17,7 @@ import {
   PlusIcon,
   ChatBubbleLeftRightIcon,
   EyeSlashIcon,
+  TrashIcon,
 } from '@heroicons/react/24/solid';
 import {
   MapPinIcon,
@@ -35,7 +36,7 @@ interface ChatSidebarProps {
   onDeleteConversation?: (id: string) => void;
 }
 
-export function ChatSidebar({ onSelectConversation, onNewConversation, onToggleStar, onTogglePin, onDeleteConversation: _onDeleteConversation }: ChatSidebarProps) {
+export function ChatSidebar({ onSelectConversation, onNewConversation, onToggleStar, onTogglePin, onDeleteConversation }: ChatSidebarProps) {
   const {
     sidebarOpen,
     toggleSidebar,
@@ -109,84 +110,137 @@ export function ChatSidebar({ onSelectConversation, onNewConversation, onToggleS
         )}
       </div>
 
-      {/* Search */}
-      <div className="px-3 pb-2">
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-tertiary)]" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isMl ? 'ചാറ്റുകൾ തിരയുക...' : 'Search chats...'}
-            className="w-full rounded-lg border border-[var(--border-secondary)] bg-[var(--surface-primary)] py-1.5 pl-8 pr-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--color-primary-400)] transition-colors"
-          />
+      {/* Search + Conversation list OR Incognito overlay */}
+      {incognitoMode ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+            <EyeSlashIcon className="h-6 w-6 text-amber-500" />
+          </div>
+          <p className={`text-sm font-semibold text-amber-600 dark:text-amber-400 ${isMl ? 'font-ml' : ''}`}>
+            {isMl ? 'ഇൻകോഗ്നിറ്റോ മോഡ്' : 'Incognito Mode'}
+          </p>
+          <p className={`mt-1 text-[11px] text-[var(--text-tertiary)] leading-relaxed ${isMl ? 'font-ml' : ''}`}>
+            {isMl
+              ? 'ചാറ്റ് ചരിത്രം സേവ് ചെയ്യില്ല. മെമ്മറി ഓഫ്.'
+              : 'Chat history won\'t be saved. Memory is off.'}
+          </p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Search */}
+          <div className="px-3 pb-2">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--text-tertiary)]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={isMl ? 'ചാറ്റുകൾ തിരയുക...' : 'Search chats...'}
+                className="w-full rounded-lg border border-[var(--border-secondary)] bg-[var(--surface-primary)] py-1.5 pl-8 pr-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none focus:border-[var(--color-primary-400)] transition-colors"
+              />
+            </div>
+          </div>
 
-      {/* Conversation list */}
-      <div className="flex-1 overflow-y-auto px-2">
-        {sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <ChatBubbleLeftRightIcon className="mb-2 h-8 w-8 text-[var(--text-tertiary)] opacity-40" />
-            <p className={`text-xs text-[var(--text-tertiary)] ${isMl ? 'font-ml' : ''}`}>
-              {searchQuery
-                ? (isMl ? 'ഫലങ്ങളൊന്നും ഇല്ല' : 'No results')
-                : (isMl ? 'ചാറ്റുകളൊന്നുമില്ല' : 'No chats yet')}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3 py-1">
-            {grouped.map((group) => (
-              <div key={group.label}>
-                <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                  {group.label}
+          {/* Conversation list */}
+          <div className="flex-1 overflow-y-auto px-2">
+            {sorted.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <ChatBubbleLeftRightIcon className="mb-2 h-8 w-8 text-[var(--text-tertiary)] opacity-40" />
+                <p className={`text-xs text-[var(--text-tertiary)] ${isMl ? 'font-ml' : ''}`}>
+                  {searchQuery
+                    ? (isMl ? 'ഫലങ്ങളൊന്നും ഇല്ല' : 'No results')
+                    : (isMl ? 'ചാറ്റുകളൊന്നുമില്ല' : 'No chats yet')}
                 </p>
-                <ul className="space-y-0.5">
-                  {group.items.map((conv) => (
-                    <ConversationItem
-                      key={conv.id}
-                      conversation={conv}
-                      isActive={conv.id === activeConversationId}
-                      locale={locale}
-                      onSelect={() => {
-                        onSelectConversation(conv.id);
-                        if (isMobile) toggleSidebar();
-                      }}
-                      onToggleStar={() => {
-                        if (onToggleStar) {
-                          onToggleStar(conv.id);
-                        } else {
-                          setConversations(
-                            conversations.map((c) =>
-                              c.id === conv.id ? { ...c, starred: !c.starred } : c
-                            )
-                          );
-                        }
-                      }}
-                      onTogglePin={() => {
-                        if (onTogglePin) {
-                          onTogglePin(conv.id);
-                        } else {
-                          setConversations(
-                            conversations.map((c) =>
-                              c.id === conv.id ? { ...c, pinned: !c.pinned } : c
-                            )
-                          );
-                        }
-                      }}
-                    />
-                  ))}
-                </ul>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3 py-1">
+                {grouped.map((group) => (
+                  <div key={group.label}>
+                    <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      {group.label}
+                    </p>
+                    <ul className="space-y-0.5">
+                      {group.items.map((conv) => (
+                        <ConversationItem
+                          key={conv.id}
+                          conversation={conv}
+                          isActive={conv.id === activeConversationId}
+                          locale={locale}
+                          onSelect={() => {
+                            onSelectConversation(conv.id);
+                            if (isMobile) toggleSidebar();
+                          }}
+                          onToggleStar={() => {
+                            if (onToggleStar) {
+                              onToggleStar(conv.id);
+                            } else {
+                              setConversations(
+                                conversations.map((c) =>
+                                  c.id === conv.id ? { ...c, starred: !c.starred } : c
+                                )
+                              );
+                            }
+                          }}
+                          onTogglePin={() => {
+                            if (onTogglePin) {
+                              onTogglePin(conv.id);
+                            } else {
+                              setConversations(
+                                conversations.map((c) =>
+                                  c.id === conv.id ? { ...c, pinned: !c.pinned } : c
+                                )
+                              );
+                            }
+                          }}
+                          onDelete={() => {
+                            if (onDeleteConversation) {
+                              onDeleteConversation(conv.id);
+                            }
+                          }}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Bottom: Incognito toggle */}
       <div className="border-t border-[var(--border-primary)] p-3">
         <button
-          onClick={() => setIncognitoMode(!incognitoMode)}
+          onClick={() => {
+            const next = !incognitoMode;
+            if (next) {
+              // Entering incognito: save current state to sessionStorage, then start a blank session
+              const state = useVaakkuStore.getState();
+              try {
+                sessionStorage.setItem('vaakku_preIncognito', JSON.stringify({
+                  sessionId: state.sessionId,
+                  messages: state.messages,
+                  activeConversationId: state.activeConversationId,
+                }));
+              } catch { /* ignore */ }
+              state.resetSession();
+            } else {
+              // Leaving incognito: restore previous session state from sessionStorage
+              try {
+                const raw = sessionStorage.getItem('vaakku_preIncognito');
+                if (raw) {
+                  const prev = JSON.parse(raw);
+                  useVaakkuStore.setState({
+                    sessionId: prev.sessionId,
+                    messages: prev.messages || [],
+                    activeConversationId: prev.activeConversationId ?? null,
+                  });
+                  sessionStorage.removeItem('vaakku_preIncognito');
+                }
+              } catch { /* ignore */ }
+            }
+            setIncognitoMode(next);
+          }}
           className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
             incognitoMode
               ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
@@ -196,7 +250,7 @@ export function ChatSidebar({ onSelectConversation, onNewConversation, onToggleS
           <EyeSlashIcon className="h-4 w-4" />
           <span className={isMl ? 'font-ml' : ''}>
             {incognitoMode
-              ? (isMl ? 'ഇൻകോഗ്നിറ്റോ ഓൺ' : 'Incognito On')
+              ? (isMl ? 'ഇൻകോഗ്നിറ്റോ ഓഫ് ചെയ്യുക' : 'Exit Incognito')
               : (isMl ? 'ഇൻകോഗ്നിറ്റോ' : 'Incognito')}
           </span>
           {incognitoMode && (
@@ -271,6 +325,7 @@ function ConversationItem({
   onSelect,
   onToggleStar: _onToggleStar,
   onTogglePin: _onTogglePin,
+  onDelete,
 }: {
   conversation: ConversationListItem;
   isActive: boolean;
@@ -278,12 +333,14 @@ function ConversationItem({
   onSelect: () => void;
   onToggleStar: () => void;
   onTogglePin: () => void;
+  onDelete: () => void;
 }) {
   const isMl = locale === 'ml';
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   return (
     <li
-      className={`group rounded-lg transition-colors ${
+      className={`group relative rounded-lg transition-colors ${
         isActive
           ? 'bg-[var(--color-primary-500)]/10 text-[var(--text-primary)]'
           : 'text-[var(--text-secondary)] hover:bg-[var(--surface-tertiary)]'
@@ -306,6 +363,43 @@ function ConversationItem({
           <StarSolidIcon className="h-3 w-3 shrink-0 text-amber-500" />
         )}
       </button>
+
+      {/* Delete button — visible on hover */}
+      {!confirmDelete ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmDelete(true);
+          }}
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-md opacity-0 group-hover:opacity-100 text-[var(--text-tertiary)] hover:text-red-500 hover:bg-red-500/10 transition-all"
+          aria-label={isMl ? 'ചാറ്റ് ഡിലീറ്റ് ചെയ്യുക' : 'Delete chat'}
+          title={isMl ? 'ഡിലീറ്റ്' : 'Delete'}
+        >
+          <TrashIcon className="h-3.5 w-3.5" />
+        </button>
+      ) : (
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-md bg-[var(--surface-primary)] border border-[var(--border-primary)] px-1.5 py-0.5 shadow-sm z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+              setConfirmDelete(false);
+            }}
+            className="text-[10px] font-medium text-red-500 hover:text-red-600 px-1.5 py-0.5 rounded hover:bg-red-500/10 transition-colors"
+          >
+            {isMl ? 'ഉറപ്പാണോ?' : 'Delete'}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmDelete(false);
+            }}
+            className="text-[10px] font-medium text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] px-1.5 py-0.5 rounded hover:bg-[var(--surface-tertiary)] transition-colors"
+          >
+            {isMl ? 'വേണ്ട' : 'Cancel'}
+          </button>
+        </div>
+      )}
     </li>
   );
 }
