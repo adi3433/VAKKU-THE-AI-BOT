@@ -184,14 +184,31 @@ function detectStructuredLookup(
 
 // ── Modality detection ───────────────────────────────────────────
 
+/**
+ * Auto-generated upload placeholder messages that should not trigger RAG.
+ * The frontend sends these as the `message` when user just uploads an image
+ * without typing a real question.
+ */
+const AUTO_UPLOAD_MESSAGES = new Set([
+  'extract information from this document',
+  'analyze this file',
+  'ഈ ഡോക്യുമെന്റിൽ നിന്ന് വിവരങ്ങൾ എക്\u200Cസ്ട്രാക്ട് ചെയ്യുക',
+  'ഈ ഫയൽ വിശകലനം ചെയ്യുക',
+]);
+
+function isAutoUploadMessage(text?: string): boolean {
+  if (!text) return true;
+  return AUTO_UPLOAD_MESSAGES.has(text.trim().toLowerCase());
+}
+
 function detectModality(input: RouterInput): InputModality {
   const hasAudio = !!(input.audioData);
   const hasImage = !!(input.imageBase64);
   const hasText = !!(input.text?.trim());
 
   if (hasAudio) return 'audio'; // Audio takes priority for transcription
-  if (hasImage && hasText) return 'image_with_text';
-  if (hasImage) return 'image';
+  if (hasImage && hasText && !isAutoUploadMessage(input.text)) return 'image_with_text';
+  if (hasImage) return 'image'; // Treat image + auto-generated text as image-only
   return 'text';
 }
 
@@ -427,20 +444,27 @@ export async function routeInput(input: RouterInput): Promise<RouterResult> {
 
     // ── Image + text: Multimodal ────────────────────────────
     case 'image_with_text': {
-      // Use vision extraction with context from text
+      // Vision extraction is always the primary pipeline for images
       visionResult = await extractDocumentFields(
         input.imageBase64!,
         input.imageMimeType || 'image/jpeg',
         resolvedLocale
       );
 
-      // Also run RAG on the text question for additional context
-      ragResult = await ragOrchestrate({
-        query: resolvedQuery,
-        locale: resolvedLocale,
-        conversationHistory: input.conversationHistory || [],
-        userId: input.userId,
-      });
+      // Run RAG on the user's genuine text question for supplementary context.
+      // This only fires when the user typed a real question alongside the image
+      // (auto-generated upload labels are filtered out in detectModality).
+      try {
+        ragResult = await ragOrchestrate({
+          query: resolvedQuery,
+          locale: resolvedLocale,
+          conversationHistory: input.conversationHistory || [],
+          userId: input.userId,
+        });
+      } catch (err) {
+        // RAG failure should not block the vision result
+        console.warn('[router] RAG failed during multimodal, using vision only:', err);
+      }
 
       resultType = 'multimodal';
       break;

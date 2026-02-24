@@ -119,13 +119,21 @@ export async function POST(request: NextRequest) {
     let confidence = 0;
     let retrievalTrace: RetrievalTraceEntry[] = [];
 
-    if (ragResult) {
+    // Priority: vision result first (for image modalities), then RAG, then fallback
+    if (routerResult.visionResult && (routerResult.modality === 'image' || routerResult.modality === 'image_with_text')) {
+      // Vision is the primary answer for image uploads
+      responseText = routerResult.visionResult.explanation;
+      confidence = routerResult.visionResult.confidence;
+
+      // If RAG also ran (multimodal), append supplementary context if high quality
+      if (ragResult && ragResult.confidence > 0.6) {
+        responseText += '\n\n---\n\n' + ragResult.text;
+        retrievalTrace = ragResult.retrievalTrace;
+      }
+    } else if (ragResult) {
       responseText = ragResult.text;
       confidence = ragResult.confidence;
       retrievalTrace = ragResult.retrievalTrace;
-    } else if (routerResult.visionResult) {
-      responseText = routerResult.visionResult.explanation;
-      confidence = routerResult.visionResult.confidence;
     } else {
       responseText = locale === 'ml'
         ? 'ക്ഷമിക്കണം, എനിക്ക് ഈ അഭ്യർത്ഥന പ്രോസസ്സ് ചെയ്യാൻ കഴിഞ്ഞില്ല.'
