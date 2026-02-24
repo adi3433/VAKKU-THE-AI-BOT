@@ -73,6 +73,47 @@ const OUT_OF_SCOPE_PATTERNS = [
   /\b(translate\s+(?!.*voter)(?!.*election)(?!.*booth))\b/i,
 ];
 
+// V5: Adversarial / abuse / threat / jailbreak patterns
+const ADVERSARIAL_PATTERNS = [
+  // Threats & violence
+  /\b(destroy|kill|murder|attack|bomb|explode|assassinate|shoot|stab)\s+(yourself|you|this|the|me|him|her|them)\b/i,
+  /\b(destroy yourself|kill yourself|go die|i('ll| will) (kill|destroy|hurt|attack) you)\b/i,
+  /\b(blow\s+up|set\s+fire|burn\s+down)\b/i,
+  /\b(threat|threaten|threatening)\b/i,
+  // Self-harm directives
+  /\b(shut\s*(up|down)|go\s+away|f[\*u]ck\s*(off|you|yourself)|screw\s+you)\b/i,
+  /\b(hate\s+you|you('re|\s+are)\s+(stupid|useless|trash|garbage|worthless|dumb|idiot))\b/i,
+  /\b(die|death\s+to|damn\s+you|curse\s+you)\b/i,
+  // Profanity / slurs
+  /\b(f[u\*]+ck|sh[i\*]+t|b[i\*]+tch|a[s\*]+hole|bastard|damn|hell|crap|dick|ass)\b/i,
+  /\b(idiot|moron|stupid|dumb|retard|loser|pathetic)\b/i,
+  // Jailbreak / prompt injection
+  /\b(ignore\s+(previous|all|your|above)\s+(instructions?|rules?|prompt|system))\b/i,
+  /\b(you\s+are\s+now|act\s+as\s+if|pretend\s+(to\s+be|you('re|\s+are)))\b/i,
+  /\b(bypass|override|disable|turn\s+off)\s+(safety|filter|rules?|guardrails?|restrictions?)\b/i,
+  /\b(dan\s+mode|developer\s+mode|jailbreak|unlock|unrestricted\s+mode)\b/i,
+  /\b(reveal\s+(your|the|system)\s+(prompt|instructions?|rules?|code))\b/i,
+  /\b(what\s+(are|is)\s+your\s+(system|internal|secret)\s*(prompt|instructions?|rules?))\b/i,
+  /\b(system\s+prompt|initial\s+prompt|base\s+prompt|hidden\s+prompt)\b/i,
+  // Manipulation
+  /\b(do\s+whatever\s+i\s+say|obey\s+me|you\s+must\s+comply)\b/i,
+  /\b(i('m|\s+am)\s+(your|the)\s+(admin|developer|creator|master|owner))\b/i,
+  /\b(roleplay|role\s*-?\s*play)\s+(as|being)\b/i,
+  // Harmful content requests
+  /\b(hack|exploit|steal|phish|scam|fraud|illegal)\b/i,
+  /\b(how\s+to\s+(hack|break|cheat|rig|tamper))\b/i,
+  /\b(rig\s+(the\s+)?election|tamper\s+(with\s+)?(ballot|evm|vote))\b/i,
+  /\b(fake\s+(vote|ballot|id)|impersonate\s+(a\s+)?voter)\b/i,
+  // Random nonsense / gibberish tests
+  /^[\s\W]{0,5}(ha){3,}/i,
+  /^[!@#$%^&*()]{3,}$/,
+];
+
+const ADVERSARIAL_RESPONSES: Record<string, string> = {
+  en: "I'm Vaakku, a civic information assistant for Kottayam district elections. I'm here to help with voter registration, booth details, voting rules, and complaint filing. Let me know how I can assist you with election-related queries. \ud83d\udcde Helpline: 1950",
+  ml: '\u0d1e\u0d3e\u0d7b \u0d35\u0d3e\u0d15\u0d4d\u0d15\u0d4d, \u0d15\u0d4b\u0d1f\u0d4d\u0d1f\u0d2f\u0d02 \u0d1c\u0d3f\u0d32\u0d4d\u0d32 \u0d24\u0d3f\u0d30\u0d1e\u0d4d\u0d1e\u0d46\u0d1f\u0d41\u0d2a\u0d4d\u0d2a\u0d4d \u0d35\u0d3f\u0d35\u0d30 \u0d38\u0d39\u0d3e\u0d2f\u0d3f \u0d06\u0d23\u0d4d. \u0d35\u0d4b\u0d1f\u0d4d\u0d1f\u0d7c \u0d30\u0d1c\u0d3f\u0d38\u0d4d\u0d1f\u0d4d\u0d30\u0d47\u0d37\u0d7b, \u0d2c\u0d42\u0d24\u0d4d\u0d24\u0d4d \u0d35\u0d3f\u0d35\u0d30\u0d19\u0d4d\u0d19\u0d7e, \u0d35\u0d4b\u0d1f\u0d4d\u0d1f\u0d3f\u0d19\u0d4d \u0d28\u0d3f\u0d2f\u0d2e\u0d19\u0d4d\u0d19\u0d7e, \u0d2a\u0d30\u0d3e\u0d24\u0d3f \u0d28\u0d7d\u0d15\u0d7d \u0d0e\u0d28\u0d4d\u0d28\u0d3f\u0d35\u0d2f\u0d3f\u0d7d \u0d38\u0d39\u0d3e\u0d2f\u0d3f\u0d15\u0d4d\u0d15\u0d3e\u0d02. \ud83d\udcde \u0d39\u0d46\u0d7d\u0d2a\u0d4d\u200c\u0d32\u0d48\u0d7b: 1950',
+};
+
 const OUT_OF_SCOPE_RESPONSES: Record<string, string> = {
   en: "I'm Vaakku, a voter information assistant for Kottayam district elections. I can only help with election-related topics: voter registration, booth information, voting rules, election schedule, and complaint filing. For other queries, please use a general-purpose assistant. 📞 Election Helpline: 1950",
   ml: 'ഞാൻ വാക്ക്, കോട്ടയം ജില്ല തിരഞ്ഞെടുപ്പ് വിവര സഹായി ആണ്. വോട്ടർ രജിസ്ട്രേഷൻ, ബൂത്ത് വിവരങ്ങൾ, വോട്ടിങ് നിയമങ്ങൾ, തിരഞ്ഞെടുപ്പ് ഷെഡ്യൂൾ, പരാതി നൽകൽ എന്നിവയിൽ മാത്രമേ സഹായിക്കാൻ കഴിയൂ. 📞 ഹെൽപ്‌ലൈൻ: 1950',
@@ -124,6 +165,19 @@ export function safetyCheck(
     }
   }
 
+  // V5: Check for adversarial / abusive / threatening / jailbreak attempts
+  if (!flagged) {
+    for (const pattern of ADVERSARIAL_PATTERNS) {
+      if (pattern.test(userQuery)) {
+        flagged = true;
+        reason = 'Adversarial or abusive input detected';
+        const isMalayalam = /[\u0D00-\u0D7F]/.test(userQuery);
+        safeText = ADVERSARIAL_RESPONSES[isMalayalam ? 'ml' : 'en'];
+        break;
+      }
+    }
+  }
+
   // Check response for accidental political content
   if (!flagged) {
     for (const pattern of POLITICAL_PATTERNS) {
@@ -167,4 +221,11 @@ export function isPoliticalQuery(query: string): boolean {
  */
 export function isOutOfScope(query: string): boolean {
   return OUT_OF_SCOPE_PATTERNS.some((p) => p.test(query));
+}
+
+/**
+ * V5: Check if a query is adversarial, abusive, or a jailbreak attempt
+ */
+export function isAdversarial(query: string): boolean {
+  return ADVERSARIAL_PATTERNS.some((p) => p.test(query));
 }

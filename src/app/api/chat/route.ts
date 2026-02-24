@@ -24,7 +24,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuid } from 'uuid';
 import { routeInput } from '@/lib/router';
 import { ragOrchestrate, type RAGOutput } from '@/lib/rag/orchestrator';
-import { safetyCheck } from '@/lib/safety';
+import { safetyCheck, isAdversarial } from '@/lib/safety';
 import { hashIdentifier } from '@/lib/privacy';
 import { ResponseCache } from '@/lib/fireworks';
 import { recordQueryLog, recordAuditEntry } from '@/lib/admin-audit';
@@ -50,6 +50,45 @@ export async function POST(request: NextRequest) {
 
     if (!message?.trim()) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+    }
+
+    // V5: Pre-routing safety check — block adversarial/abusive inputs immediately
+    const inputSafetyResult = safetyCheck('', message.trim());
+    if (inputSafetyResult.flagged) {
+      const blockedResponse: ChatResponseV2 = {
+        text: inputSafetyResult.safeText,
+        confidence: 0.99,
+        sources: [],
+        actionable: [],
+        escalate: false,
+        locale: locale || 'en',
+        messageId: uuid(),
+        timestamp: new Date().toISOString(),
+        retrievalTrace: [],
+        promptVersionHash: 'safety-block-v5',
+        generatorModel: 'safety-filter',
+        routerType: 'safety',
+        modality: 'text',
+      };
+
+      // Log blocked query for audit
+      try {
+        await recordQueryLog({
+          id: uuid(),
+          sessionId: sessionId ?? 'unknown',
+          query: '***BLOCKED***',
+          locale: (locale || 'en') as 'en' | 'ml',
+          response: inputSafetyResult.safeText,
+          confidence: 0.99,
+          sources: [],
+          escalated: false,
+          timestamp: new Date().toISOString(),
+          latencyMs: 0,
+          routerType: 'safety',
+        });
+      } catch { /* non-critical */ }
+
+      return NextResponse.json(blockedResponse);
     }
 
     // Check for streaming request
