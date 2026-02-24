@@ -8,6 +8,7 @@ on:
 
 env:
   NODE_VERSION: "22"
+  REPO_LC: "ghcr.io/adi3433/vakku-the-ai-bot"
 
 jobs:
   lint-and-test:
@@ -59,7 +60,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ${{ env.REPO_LC }}:latest
+            ${{ env.REPO_LC }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
